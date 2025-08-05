@@ -2,18 +2,29 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 
+from schemas.agent_schema import Scenario
+
 class State(BaseModel):
+    # 초기에 필요한 필드들
+    # 매장 정보
     store_name: str
-    store_address: str
-    category: str
+    business_type: str
+
+    # 브랜드 컨셉
+    brand_concept: List[str]
+
+    #이미지 리스트
+    image_list: List[str]
+
+    # 광고 정보
     platform: str
+    ad_type: str
+    target_audience: str
+    
+    # 사용자의 시나리오 요구사항
     scenario_prompt: str
-    scenarios: List[Dict[str, str]] = Field(default_factory=list)  # {"id", "title", "content"}
-    edit_request: List[Dict[str, str]] = Field(default_factory=list)  # {"selected_id", "feedback"}
-    final_scenario: Optional[Dict[str, str]] = None  # {"id", "title", "content"}
-    chatbot_answer: Optional[str] = None
-    confirmed: bool = False  # 추가) 사용자가 시나리오 수정을 확정했는지 여부
-    synopsis: str = ""
+
+    # 나중에 채워질 필드들
+    scenarios: List[Scenario] = Field(default_factory=list)  # {"title", "content"}
+    final_scenario: Optional[Scenario] = None  # {"title", "content"}
     action_scenes: Dict[str, Dict[str, str]] = Field(default_factory=dict)
-    flux_prompts: List[Dict[str, str]] = Field(default_factory=list)
-    veo_prompts: List[Dict[str, str]] = Field(default_factory=list)

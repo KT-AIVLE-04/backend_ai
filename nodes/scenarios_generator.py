@@ -1,60 +1,126 @@
 # nodes/scenario_generator.py
-import re
-import requests
-from schemas.agent_schema import AgentRequest, AgentResponse
-from states.agent_state import State
+import os
 from config.settings import settings
+import openai
+import json
+from states.agent_state import State
+from utils.image_utils import download_and_encode_image
+from schemas.agent_schema import Scenario
 
 
-def generate_scenarios(state: State, api_key=settings.perplexity_api_key) -> State:
-    prompt = (
-        f"{state.store_name} ({state.store_address}) 매장의 {state.category} 업종에서 "
-        f"{state.platform} 플랫폼에 맞는 최신 마케팅 트렌드에 기반한 영상 시나리오를 간단하게 3가지 알려줘."
-        f"추가로 다음과 같은 사용자의 요구사항도 우선적으로 고려해서 만들어줘: {state.scenario_prompt} "
-        "각 시나리오는 다음과 같은 형식으로만 제공되어야 해: "
-        "**제목:** [시나리오 제목]\n"
-        "**내용:** [시나리오 내용]\n"
-        "예를 들면 이런식으로 작성되어야해"
-         "**제목:** 감성 무드 샷\n"
-         "**내용:** 트렌디한 배경음악과 함께 제품의 개성과 분위기를 감성적으로 강조하는 숏폼\n"
-        "제목은 짧고 임팩트 있게, 내용은 목적이 뚜렷하고 구체적인 한두 문장으로 작성해줘."
-         "각 시나리오의 '내용'은 각각 80자 이상 100자 이내로 해줘."
-    )
+def generate_scenarios(state: State, api_key=settings.openai_api_key) -> State:
+    # OpenAI 클라이언트 초기화
+    client = openai.OpenAI(api_key=api_key)
+    
+    # System Message 정의
+    system_message = """당신은 소상공인을 위한 숏폼 동영상 광고 시나리오 전문가입니다.
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
+다음 규칙을 반드시 준수해주세요:
+1. 인물(사람, 손, 얼굴 등 인체 부분)은 등장하지 않아야 합니다.
+2. 텍스트/자막 없어야 합니다.
+3. 현실적으로 동영상 AI로 제작 가능
+
+응답 형식: 
+[
+    {
+        "title": "임팩트 있고 간결한 제목 (20자 이내)",
+        "content": "구체적이고 실행 가능한 시나리오 설명 (120-150자)"
+    },
+    {
+        "title": "임팩트 있고 간결한 제목 (20자 이내)",
+        "content": "구체적이고 실행 가능한 시나리오 설명 (120-150자)"
+    },
+    {
+        "title": "임팩트 있고 간결한 제목 (20자 이내)",
+        "content": "구체적이고 실행 가능한 시나리오 설명 (120-150자)"
     }
-    payload = {
-        "model": "sonar",
-        "messages": [
-            {"role": "system", "content": "제공된 형식에 맞춰 정확한 마케팅 트렌드 기반 영상 시나리오 3가지를 생성해줘. 추가적인 설명이나 다른 텍스트는 일체 포함하지 마세요."},
-            {"role": "user", "content": prompt}
-        ],
-        "max_tokens": 1000,
-        "temperature": 0.7
-    }
-    response = requests.post("https://api.perplexity.ai/chat/completions", headers=headers, json=payload)
-    response.raise_for_status()
-    data = response.json()
-    answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+]
+이와 같이 JSON 배열만 출력해야 합니다. 코드 블록 표시도 포함하지 마세요.
+그 외 추가 설명은 포함하지 마세요."""
 
-    # Parse the response to extract scenarios
-    scenarios = []
-    # This regex looks for "**제목:**" followed by anything non-newline, then "**내용:**" followed by anything until the next "**제목:**" or the end of the string.
-    scenario_pattern = re.compile(r"\*\*제목:\*\*\s*(.*?)\n\*\*내용:\*\*\s*(.*?)(?=\n\*\*제목:\*\*|$)", re.DOTALL)
-    matches = scenario_pattern.findall(answer)
+    # User 프롬프트 생성
+    prompt = create_scenario_prompt(state)
 
-    # Use a counter for sequential IDs
-    scenario_counter = 1
-    for match in matches:
-        title = match[0].strip()
-        content = match[1].strip()
-        # Assign sequential ID and convert to string
-        scenario_id = str(scenario_counter)
-        scenarios.append({"id": scenario_id, "title": title, "content": content})
-        scenario_counter += 1 # Increment the counter
+    # 메시지 구성 시작
+    content_parts = [{"type": "text", "text": prompt}]
+    
+    # 이미지 처리 및 추가
+    for i, url in enumerate(state.image_list):
+        print(f"이미지 {i+1} 처리 중: {url}")
+        encoded_image = download_and_encode_image(url)
+        if encoded_image:
+            content_parts.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{encoded_image}",
+                    "detail": "low"  # "auto", "low", "high" 중 선택
+                }
+            })
+            print(f"이미지 {i+1} 추가 완료")
 
-    return state.model_copy(update={
-      "scenarios": scenarios,
-    })
+    # 최종 메시지 구성
+    messages = [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": content_parts}
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o", 
+            messages=messages,
+            max_tokens=2000,
+            temperature=0.7
+        )
+
+        content = response.choices[0].message.content.strip()
+        print(f"API 응답: {content}")
+        
+        scenarios = json.loads(content)
+
+        for scenario in scenarios:
+            state.scenarios.append(Scenario(title=scenario["title"], content=scenario["content"]))
+
+        return state
+
+    except json.JSONDecodeError as e:
+        print(f"JSON 파싱 오류: {e}")
+        print(f"원본 응답: {content}")
+        return state
+    except Exception as e:
+        print(f"API 호출 오류: {e}")
+        return state
+
+def create_scenario_prompt(state: State) -> str:
+    prompt = f"""
+다음 요구사항을 만족하는 소상공인을 위한 숏폼 광고 시나리오를 3개 생성해주세요.
+
+매장 정보:
+- 매장명: {state.store_name}
+- 업종: {state.business_type}
+- 브랜드 컨셉: {state.brand_concept}
+
+광고 요구사항:
+- 플랫폼: {state.platform}
+- 광고 유형: {state.ad_type}
+- 타겟 고객: {state.target_audience}
+- 특별 요구사항: {state.scenario_prompt} (무조건 반영)
+
+시나리오 작성 지침:
+- 브랜드 컨셉이 시각적으로 드러나도록 색상, 분위기, 소품 등을 설정할 것
+- 해당 플랫폼에서 자주 사용하는 광고 시나리오 형식을 참고하여 작성할 것
+- 광고 유형에 적합한 연출과 구성으로 작성할 것
+- 타겟 고객의 관심과 선호를 반영해 이목을 끌 수 있는 장면으로 구성할 것
+- 특별 요구사항은 반드시 반영할 것
+
+영상 구성 요소:
+- 카메라 움직임: 앵글, 줌, 패닝 등 구체적으로 표현
+- 조명과 색감: 브랜드 컨셉과 타겟 고객 선호에 맞춘 분위기 설정
+- 전환 효과: 장면 간 자연스럽고 리듬감 있는 연결
+- 소품과 배경: 브랜드 이미지를 강화하는 요소 활용
+- 타이밍: 각 장면의 지속 시간과 흐름을 명확히 설정
+
+이미지 활용 지침:
+제공된 {len(state.image_list)}개의 이미지를 모두 분석하고, 각 시나리오에서 구체적으로 활용할 것
+"""
+
+    return prompt

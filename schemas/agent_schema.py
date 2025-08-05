@@ -1,24 +1,36 @@
 # schemas/agent_schema.py
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
-
-class AgentRequest(BaseModel):
-    store_name: str
-    store_address: str
-    category: str
-    platform: str
-    scenario_prompt: str
-    edit_request: List[Dict[str, str]] = Field(default_factory=list)
-    confirmed: bool = False
+from typing import List
 
 class Scenario(BaseModel):
-    id: str
     title: str
     content: str
 
-class AgentResponse(BaseModel):
+class ScenarioRequest(BaseModel):
+    # 매장 정보
+    store_name: str
+    business_type: str
+
+    # 브랜드 컨셉
+    brand_concept: List[str]
+
+    #이미지 리스트
+    image_list: List[str]
+
+    # 광고 정보
+    platform: str
+    ad_type: str
+    target_audience: str
+    
+    # 사용자의 시나리오 요구사항
+    scenario_prompt: str
+
+class ScenarioResponse(BaseModel):
+    session_id: str
     scenarios: List[Scenario] = Field(default_factory=list)
-    final_scenario: Optional[Scenario] = None
-    chatbot_answer: Optional[str] = None
-    flux_prompts: List[Dict[str, str]] = Field(default_factory=list)
-    veo_prompts: List[Dict[str, str]] = Field(default_factory=list)
+
+class SelectScenarioRequest(BaseModel):
+    session_id: str
+    title: str
+    content: str
+
