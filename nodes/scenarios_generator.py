@@ -16,23 +16,22 @@ def generate_scenarios(state: State, api_key=settings.openai_api_key) -> State:
     system_message = """당신은 소상공인을 위한 숏폼 동영상 광고 시나리오 전문가입니다.
 
 다음 규칙을 반드시 준수해주세요:
-1. 인물(사람, 손, 얼굴 등 인체 부분)은 등장하지 않아야 합니다.
+1. 동영상 촬영 기법이나 과 같은 요소는 없어야 합니다. 스토리만 포함하세요.
 2. 텍스트/자막 없어야 합니다.
-3. 현실적으로 동영상 AI로 제작 가능
 
 응답 형식: 
 [
     {
         "title": "임팩트 있고 간결한 제목 (20자 이내)",
-        "content": "구체적이고 실행 가능한 시나리오 설명 (120-150자)"
+        "content": "시나리오 설명 (120-150자)"
     },
     {
         "title": "임팩트 있고 간결한 제목 (20자 이내)",
-        "content": "구체적이고 실행 가능한 시나리오 설명 (120-150자)"
+        "content": "시나리오 설명 (120-150자)"
     },
     {
         "title": "임팩트 있고 간결한 제목 (20자 이내)",
-        "content": "구체적이고 실행 가능한 시나리오 설명 (120-150자)"
+        "content": "시나리오 설명 (120-150자)"
     }
 ]
 이와 같이 JSON 배열만 출력해야 합니다. 코드 블록 표시도 포함하지 마세요.
@@ -66,7 +65,7 @@ def generate_scenarios(state: State, api_key=settings.openai_api_key) -> State:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o", 
+            model="gpt-4o-mini", 
             messages=messages,
             max_tokens=2000,
             temperature=0.7
@@ -92,7 +91,7 @@ def generate_scenarios(state: State, api_key=settings.openai_api_key) -> State:
 
 def create_scenario_prompt(state: State) -> str:
     prompt = f"""
-다음 요구사항을 만족하는 소상공인을 위한 숏폼 광고 시나리오를 3개 생성해주세요.
+다음 요구사항을 만족하는 소상공인을 위한 숏폼 광고 시나리오를 스토리 형식으로 3개 생성해주세요.
 
 매장 정보:
 - 매장명: {state.store_name}
@@ -109,15 +108,10 @@ def create_scenario_prompt(state: State) -> str:
 - 브랜드 컨셉이 시각적으로 드러나도록 색상, 분위기, 소품 등을 설정할 것
 - 해당 플랫폼에서 자주 사용하는 광고 시나리오 형식을 참고하여 작성할 것
 - 광고 유형에 적합한 연출과 구성으로 작성할 것
-- 타겟 고객의 관심과 선호를 반영해 이목을 끌 수 있는 장면으로 구성할 것
+- 타겟 고객의 관심과 선호를 반영해 이목을 끌 수 있는 스토리로 구성할 것
 - 특별 요구사항은 반드시 반영할 것
-
-영상 구성 요소:
-- 카메라 움직임: 앵글, 줌, 패닝 등 구체적으로 표현
-- 조명과 색감: 브랜드 컨셉과 타겟 고객 선호에 맞춘 분위기 설정
-- 전환 효과: 장면 간 자연스럽고 리듬감 있는 연결
-- 소품과 배경: 브랜드 이미지를 강화하는 요소 활용
-- 타이밍: 각 장면의 지속 시간과 흐름을 명확히 설정
+- 인물(사람, 손, 얼굴 등 인체 부분)은 등장시키지 말 것
+- 단순히 장면과 분위기를 묘사하는 문장만 작성할 것 (설명적 어구는 사용하지 말 것)
 
 이미지 활용 지침:
 제공된 {len(state.image_list)}개의 이미지를 모두 분석하고, 각 시나리오에서 구체적으로 활용할 것

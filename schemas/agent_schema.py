@@ -29,8 +29,9 @@ class ScenarioResponse(BaseModel):
     session_id: str
     scenarios: List[Scenario] = Field(default_factory=list)
 
-class SelectScenarioRequest(BaseModel):
+class ActionScenesRequest(BaseModel):
     session_id: str
     title: str
     content: str
+    ad_duration: int
 
