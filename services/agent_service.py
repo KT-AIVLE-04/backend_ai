@@ -33,7 +33,7 @@ async def resume_agent_flow(
     session_id = payload.session_id
 
     resumed_result = await graph.ainvoke(
-        Command(resume={"final_scenario": scenario}),
+        Command(resume={"final_scenario": scenario, "ad_duration": payload.ad_duration}),
         config={"configurable": {"thread_id": session_id}}
     )
     
