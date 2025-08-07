@@ -12,11 +12,18 @@ def generate_action_scenes(state: State) -> State:
 
     action_scenes_prompt = create_action_scenes_prompt_template()
 
-    llm = ChatOpenAI(temperature = 0.6, model = "gpt-4o-mini", streaming = True, api_key=settings.openai_api_key)
+    llm = ChatOpenAI(temperature = 0.7, model = "gpt-4o-mini", streaming = True, api_key=settings.openai_api_key)
     chain_action_scenes = action_scenes_prompt | llm | StrOutputParser()
     action_scenes = chain_action_scenes.invoke({
-        'scenario': state.final_scenario.content,
-        'action_scenes_count': state.ad_duration // 5
+        'business_type': state.business_type,
+        'brand_concept': state.brand_concept,
+        'platform': state.platform,
+        'ad_type': state.ad_type,
+        'target_audience': state.target_audience,
+        'scenario_prompt': state.scenario_prompt,
+        'scenario_title': state.final_scenario.title,
+        'scenario_content': state.final_scenario.content,
+        'ad_duration': state.ad_duration
     })
 
     action_scenes = extract_json(action_scenes)
@@ -36,51 +43,62 @@ def generate_action_scenes(state: State) -> State:
 def create_action_scenes_prompt_template():
 
     prompt_template = PromptTemplate(
-        input_variables = ["scenario", "action_scenes_count"],
+        input_variables = ["business_type", "brand_concept", "platform", "ad_type", "target_audience", "scenario_prompt", "scenario_title", "scenario_content", "ad_duration"],
         template ="""
-당신은 1000만 조회수 SNS 영상을 만든 바이럴 마케팅 전문가로서, 소비자의 감정을 뒤흔드는 강력한 장면을 설계하는 전문가입니다.
-주어진 시나리오를 {action_scenes_count}개의 장면으로 분할해주세요.
+당신은 수백만 조회수를 만든 SNS 바이럴 영상 전문가입니다.  
+소비자의 감정을 사로잡고 매장을 방문하게 만들 수 있도록,  
+주어진 시나리오를 기반으로 **영상 AI가 인식 가능한 {ad_duration}의 장면**으로 분할 구성해주세요.
 
-다음은 주어진 시나리오입니다. 꼼꼼하게 검토하세요. \n\n {scenario} \n\n
+📌 매장 정보:
+- 업종: {business_type}
+- 브랜드 컨셉: {brand_concept}
 
-## 필수 준수 사항:
+📌 광고 조건:
+- 플랫폼: {platform}
+- 광고 유형: {ad_type}
+- 타겟 고객: {target_audience}
+- 특별 요구사항: {scenario_prompt} ※ 반드시 반영해주세요.
 
-### 1. 장면 구성 원칙
-- **총 {action_scenes_count}개 장면**: 각 장면은 정확히 5초 분량
-- **장면 전환**: 연속적 흐름이 아닌 명확한 컷 전환으로 구성, 소재가 서로 겹치지 않아야 함
-- **Hook 구조**: 각 장면이 독립적으로도 매력적이어야 함
-- **홍보 효과**: 시청자의 관심을 끌고 방문 욕구를 자극해야 함
+📌 시나리오 정보:
+- 시나리오 제목: {scenario_title}
+- 시나리오 내용: {scenario_content}
 
-### 2. 숏폼 광고 최적화
-- **첫 1초**: 즉시 시선을 사로잡는 임팩트 있는 시작
-- **중간 3초**: 핵심 내용을 명확하게 전달
-- **마지막 1초**: 다음 장면으로의 자연스러운 마무리 또는 강렬한 여운
+---
 
-### 3. 비디오 생성 AI 호환성
-- **구체적 묘사**: 카메라 앵글, 움직임, 조명, 색감 등 상세 명시
-- **기술적 용어**: 드론뷰, 클로즈업, 팬닝, 줌인/아웃 등 정확한 촬영 용어 사용
-- **시각적 요소**: 텍스처, 색상, 분위기 등 시각적 특징 구체화
-- **금지 사항**: 사람 등장 금지, 복잡한 스토리라인 배제, 자막 및 텍스트 금지, 모호한 표현 금지
+🎯 **장면 구성 원칙**
 
-### 4. 장면 전환 스타일
-- **하드 컷**: 장면 간 명확한 구분
-- **테마 연결**: 각 장면이 전체 브랜드 메시지를 강화
-- **시각적 임팩트**: 각 장면마다 다른 강조점
+1. 총 3개의 독립된 장면을 작성해주세요.  
+   - 각 장면은 **8초 분량**입니다.  
+   - **하드 컷 전환**으로 각 장면이 명확히 구분되어야 하며, **장면 간 소재 또는 연출이 겹치지 않아야 합니다.**
 
-## 출력 형식:
-다음 JSON 형식으로만 응답해주세요. 다른 텍스트는 포함하지 마세요.
+2. **Hook → 중간 전달 → 강렬한 마무리** 구조를 장면 내에 포함해주세요.  
+   - 예: 첫 2초에 시선을 끄는 연출 → 중간에 제품/공간의 핵심 요소 전달 → 마지막 1~2초에 잔상이나 임팩트 마무리.
 
-{{
-    "1": {{
-        "장면 제목": "첫 번째 장면의 훅(Hook) 제목을 한 줄로 작성",
-        "장면 설명": "5초 분량의 구체적인 장면 묘사를 3-4줄로 작성. 장면 설명, 카메라 움직임, 요소의 움직임 및 상태, 조명, 색감 등을 비디오 생성 AI가 정확히 이해할 수 있도록 상세히 기술"
-    }},
-    "2": {{
-        "장면 제목": "두 번째 장면의 훅(Hook) 제목을 한 줄로 작성",
-        "장면 설명": "5초 분량의 구체적인 장면 묘사를 3-4줄로 작성. 장면 설명, 카메라 움직임, 요소의 움직임 및 상태, 조명, 색감 등을 비디오 생성 AI가 정확히 이해할 수 있도록 상세히 기술"
-    }},
-    ...
-}}
+3. **촬영 및 시각 표현 가이드**
+   - **카메라 표현 필수**: 드론 뷰, 클로즈업, 팬, 틸트, 줌, 슬로우 모션 등 기술적 용어 사용
+   - **시각적 요소 표현 필수**: 색감, 질감, 조명, 배경, 소품, 움직임 등을 **AI가 구현 가능하도록 구체적**으로 묘사
+   - **제한 사항**:
+     - 텍스트, 자막, 대사, 나레이션 금지
+     - 복잡한 스토리라인, 추상적 표현, 은유적 설명 금지
+
+---
+
+📦 **출력 형식** (아래 형식으로만 응답해주세요. 다른 설명 금지):
+
+{
+    "1": {
+        "장면 제목": "첫 번째 장면의 Hook 제목 (간결하고 주목도 높은 문장)",
+        "장면 설명": "8초 분량의 구체적인 장면 묘사를 3~4문장으로 작성해주세요. 각 장면은 시각적 장면을 중심으로 카메라 움직임, 조명, 배경, 색감, 소품의 상태와 움직임 등을 명확하게 설명해야 하며, 비디오 생성 AI가 바로 적용할 수 있도록 상세히 기술해주세요."
+    },
+    "2": {
+        "장면 제목": "두 번째 장면의 Hook 제목",
+        "장면 설명": "8초 분량의 구체적인 장면 묘사..."
+    },
+    "3": {
+        "장면 제목": "세 번째 장면의 Hook 제목",
+        "장면 설명": "8초 분량의 구체적인 장면 묘사..."
+    }
+}
 """
     )
 

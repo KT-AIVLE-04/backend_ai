@@ -16,8 +16,9 @@ def generate_action_scene_images(state: State) -> State:
 
     combined_image_url = combine_images(state.image_list)
     
-    for action_scene_content in translated_contents:
+    for i, action_scene in enumerate(state.action_scenes):
         # 번역된 내용 사용
+        action_scene_content = translated_contents[i]
         prompt = create_action_scene_image_prompt(action_scene_content)
 
         action_scene_image_url = client.run(
@@ -26,12 +27,9 @@ def generate_action_scene_images(state: State) -> State:
                 "prompt": prompt,
                 "input_image": combined_image_url,
                 "go_fast": False, 
-                "guidance": 2.5, 
                 "aspect_ratio": "9:16",
                 "output_format": "jpg",
-                "output_quality": 80,
-                "num_inference_steps": 45,
-                "seed": random.randint(0, 10000000)
+                "prompt_upsampling": False
             }
         )
 
@@ -59,7 +57,7 @@ TASK:
 4. If the action scene requires elements that are not present in the input image,  
    add them in a way that aligns with the brand identity derived from the input image.
 
-ACTION SCENE (variable):  
+ACTION SCENE :  
 "{action_scene_content}"
 
 OUTPUT REQUIREMENTS:
