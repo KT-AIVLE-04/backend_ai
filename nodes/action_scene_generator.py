@@ -29,6 +29,7 @@ def generate_action_scenes(state: State) -> State:
         )
         state.action_scenes.append(action_scene)
 
+    print(state.action_scenes)
     return state
 
 
@@ -46,7 +47,7 @@ def create_action_scenes_prompt_template():
 
 ### 1. 장면 구성 원칙
 - **총 {action_scenes_count}개 장면**: 각 장면은 정확히 5초 분량
-- **장면 전환**: 연속적 흐름이 아닌 명확한 컷 전환으로 구성
+- **장면 전환**: 연속적 흐름이 아닌 명확한 컷 전환으로 구성, 소재가 서로 겹치지 않아야 함
 - **Hook 구조**: 각 장면이 독립적으로도 매력적이어야 함
 - **홍보 효과**: 시청자의 관심을 끌고 방문 욕구를 자극해야 함
 

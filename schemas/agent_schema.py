@@ -40,3 +40,6 @@ class ActionScenesRequest(BaseModel):
     content: str
     ad_duration: int
 
+class ActionScenesResponse(BaseModel):
+    action_scenes: List[ActionScene]
+    action_scenes_image_list: List[str]

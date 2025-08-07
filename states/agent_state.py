@@ -29,3 +29,4 @@ class State(BaseModel):
     scenarios: List[Scenario] = Field(default_factory=list)  # {"title", "content"}
     final_scenario: Optional[Scenario] = None  # {"title", "content"}
     action_scenes: List[ActionScene] = Field(default_factory=list)
+    action_scenes_image_list: List[str] = Field(default_factory=list)

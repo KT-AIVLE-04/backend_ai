@@ -3,7 +3,7 @@ import uuid
 from core.agent_graph import graph
 from langgraph.types import Command
 from states.agent_state import State
-from schemas.agent_schema import Scenario, ScenarioRequest, ScenarioResponse, ActionScenesRequest
+from schemas.agent_schema import ActionScenesResponse, Scenario, ScenarioRequest, ScenarioResponse, ActionScenesRequest
 
 async def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
      # 새로운 세션 ID 생성
@@ -28,7 +28,7 @@ async def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
 
 async def resume_agent_flow(
     payload: ActionScenesRequest
-):
+) -> ActionScenesResponse:
     scenario = Scenario(title=payload.title, content=payload.content)
     session_id = payload.session_id
 
@@ -37,5 +37,7 @@ async def resume_agent_flow(
         config={"configurable": {"thread_id": session_id}}
     )
     
-    
-    return {"message": "시나리오 확정 완료", "result": resumed_result}
+    print(resumed_result)
+    print(type(resumed_result))
+
+    return ActionScenesResponse(action_scenes=resumed_result["action_scenes"], action_scenes_image_list=resumed_result["action_scenes_image_list"])
