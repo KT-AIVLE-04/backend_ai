@@ -1,7 +1,8 @@
 # core/agent_graph.py
 from typing import Literal
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.redis import RedisSaver
+import redis
 from nodes.action_scene_generator import generate_action_scenes
 from nodes.action_scene_image_generator import generate_action_scene_images
 from nodes.human_select import user_select_scenario
@@ -23,6 +24,10 @@ builder.add_edge("create_scenarios", "user_select_scenario")
 builder.add_edge("user_select_scenario", "generate_scenes")
 builder.add_edge("generate_scenes", "generate_action_scene_images")
 builder.add_edge("generate_action_scene_images", END)
+
+redis_client = redis.Redis.from_url("redis://localhost:6379")
+checkpointer = RedisSaver(redis_client=redis_client, ttl={"default_ttl": 3600})
+graph = builder.compile(checkpointer=checkpointer)
 
 # # 분기 처리
 # def has_edit_request(state: State) -> Literal["needs_edit", "skip_edit"]:
@@ -66,7 +71,4 @@ builder.add_edge("generate_action_scene_images", END)
 # builder.add_edge("generate_all_veo_prompts", END)
 
 # 컴파일
-checkpointer = InMemorySaver()
-graph = builder.compile(
-    checkpointer=checkpointer
-)
+# checkpointer = InMemorySaver()

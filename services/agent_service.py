@@ -5,13 +5,13 @@ from langgraph.types import Command
 from states.agent_state import State
 from schemas.agent_schema import ActionScenesResponse, Scenario, ScenarioRequest, ScenarioResponse, ActionScenesRequest
 
-async def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
+def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
      # 새로운 세션 ID 생성
     session_id = str(uuid.uuid4())
     
     state = State(**payload.model_dump())
 
-    result = await graph.ainvoke(
+    result = graph.invoke(
         state,
         config={"configurable": {"thread_id": session_id}}
     )
@@ -26,13 +26,13 @@ async def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
 
     return ScenarioResponse(session_id=session_id, scenarios=[])
 
-async def resume_agent_flow(
+def resume_agent_flow(
     payload: ActionScenesRequest
 ) -> ActionScenesResponse:
     scenario = Scenario(title=payload.title, content=payload.content)
     session_id = payload.session_id
 
-    resumed_result = await graph.ainvoke(
+    resumed_result = graph.invoke(
         Command(resume={"final_scenario": scenario, "ad_duration": payload.ad_duration}),
         config={"configurable": {"thread_id": session_id}}
     )
