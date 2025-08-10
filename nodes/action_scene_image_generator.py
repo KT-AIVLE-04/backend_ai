@@ -49,23 +49,21 @@ def generate_action_scene_images(state: State) -> State:
 def create_action_scene_image_prompt(action_scene_content: str):
     prompt = f"""
 TASK:
-1. Analyze the provided input image (a stitched photo of the business/store or products).
-   - Extract key visual elements: brand colors, textures, signature product shapes, and overall style.
-2. **Do NOT directly copy or reuse the exact composition of the input image.**
-3. **Recompose and redesign the scene based on the given action scene description**,  
-   naturally incorporating the extracted brand elements (e.g., color palette, textures, signature products).
-4. If the action scene requires elements that are not present in the input image,  
-   add them in a way that aligns with the brand identity derived from the input image.
+1. Based on the given action scene description, generate exactly one image representing the very first frame of the scene only.
+2. Analyze the provided input image (store or product photo) to extract key visual elements such as brand colors, textures, signature product shapes, and overall style.
+3. Do NOT copy or reuse the input image directly — the scene must be fully reinterpreted.
+4. Create only the first frame image; leave the depiction of the rest of the scene to the video AI.
+5. If new elements are needed, add them in a way that aligns with the brand identity.
 
-ACTION SCENE :  
+ACTION SCENE:  
 "{action_scene_content}"
 
 OUTPUT REQUIREMENTS:
 - Generate exactly ONE image.
+- No collage, split-screen, diptych, triptych, or multiple frames.
+- Maintain consistent perspective, lighting, and atmosphere throughout.
 - Use realistic photographic quality suitable for a video frame.
-- Reconstruct the scene to match the action scene while reflecting brand identity.
-- Do NOT simply duplicate or overlay the input image.
-- Ensure no text, watermarks, or human figures are present.
+- Ensure no text or watermarks are present.
 """
     return prompt
 
@@ -95,7 +93,7 @@ def translate_action_scenes_to_english(action_scenes):
 	•	카메라 앵글, 움직임, 조명, 색상에 대한 설명을 모두 유지할 것
 	•	5초 장면 타이밍 맥락을 유지할 것
 	•	전문 영상 제작 영어 용어를 사용할 것
-	•	출력은 반드시 동일한 순서의 JSON 배열 형태로만 반환할 것
+	•	출력은 반드시 동일한 순서의 JSON 배열 형태로만 반환할 것. 코드블록 사용 금지
 
 출력 형식:
 ["translated scene 1", "translated scene 2", "translated scene 3", ...]
@@ -114,6 +112,8 @@ def translate_action_scenes_to_english(action_scenes):
     
     result = chain.invoke({"contents": contents_str})
     
+    print("API결과: ", result)
+
     # JSON 파싱해서 리스트 반환
     try:
         # JSON 형태로 응답이 온 경우 파싱

@@ -25,7 +25,7 @@ class State(BaseModel):
     scenario_prompt: str
 
     # 나중에 채워질 필드들
-    ad_duration: int = 24 # default
+    ad_duration: int = 15 # default
     scenarios: List[Scenario] = Field(default_factory=list)  # {"title", "content"}
     final_scenario: Optional[Scenario] = None  # {"title", "content"}
     action_scenes: List[ActionScene] = Field(default_factory=list)

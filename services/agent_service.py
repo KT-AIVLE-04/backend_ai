@@ -40,4 +40,4 @@ def resume_agent_flow(
     print(resumed_result)
     print(type(resumed_result))
 
-    return ActionScenesResponse(action_scenes=resumed_result["action_scenes"], action_scenes_image_list=resumed_result["action_scenes_image_list"])
+    return ActionScenesResponse(session_id=session_id, scenes=resumed_result["action_scenes"], scenes_image_list=resumed_result["image_list"], ai_scenes_image_list=resumed_result["action_scenes_image_list"])
