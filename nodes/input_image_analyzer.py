@@ -57,7 +57,7 @@ JSON 형태로만 응답해주세요. 코드블럭은 제외하세요.
         
         # GPT-4o API 호출
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=messages,
             max_tokens=2000,
             temperature=0.2
