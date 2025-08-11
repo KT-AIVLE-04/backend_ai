@@ -1,128 +1,180 @@
+import json
 import random
 from config.settings import settings
 from states.agent_state import State
+from openai import OpenAI
 import replicate
 from utils.image_utils import combine_images
-from langchain_openai import ChatOpenAI
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
-import json
 
 def generate_scene_images(state: State) -> State:
-    client = replicate.Client(api_token=settings.replicate_api_key)
-
-    # 액션 씬 내용들을 영어로 번역
-    translated_contents = translate_scenes_to_english(state.scenes)
-
-    combined_image_url = combine_images(state.image_list)
+    
+    openai_client = OpenAI(api_key=settings.openai_api_key)
+    replicate_client = replicate.Client(api_token=settings.replicate_api_key)
+    
+    print(f"총 {len(state.scenes)}개 장면의 이미지를 생성합니다.")
     
     for i, scene in enumerate(state.scenes):
-        # 번역된 내용 사용
-        scene_content = translated_contents[i]
-        prompt = create_scene_image_prompt(scene_content)
-
-        scene_image_url = client.run(
-            "black-forest-labs/flux-kontext-max",
-            input={
-                "prompt": prompt,
-                "input_image": combined_image_url,
-                "go_fast": False, 
-                "aspect_ratio": "9:16",
-                "output_format": "jpg",
-                "prompt_upsampling": False
-            }
-        )
-
-        # FileOutput 객체를 URL 문자열로 변환
-        if hasattr(scene_image_url, 'url'):
-            image_url = scene_image_url.url
-        elif isinstance(scene_image_url, str):
-            image_url = scene_image_url
-        else:
-            image_url = str(scene_image_url)
+        print(f"\n=== 장면 {i+1}/{len(state.scenes)} 처리 중 ===")
+        print(f"장면 제목: {scene.title}")
         
-        print(image_url)
-        state.scenes_image_list.append(image_url)
-
+        try:
+            # GPT-4o로 이미지 선택 및 프롬프트 생성
+            scene_config = generate_scene_config_for_flux_kontext(
+                openai_client, state, scene, i
+            )
+            
+            if not scene_config:
+                print(f"장면 {i+1} 분석 실패, 건너뜁니다.")
+                continue
+            
+            # 선택된 이미지들로 참고 이미지 생성
+            selected_image_urls = [
+                state.image_list[idx].url 
+                for idx in scene_config["image_index"]
+                if idx < len(state.image_list)
+            ]
+            
+            if not selected_image_urls:
+                print(f"장면 {i+1}: 참고할 이미지가 없어 건너뜁니다.")
+                continue
+                
+            # 참고 이미지 합성
+            reference_image_url = combine_images(selected_image_urls)
+            
+            # flux-kontext-max로 이미지 생성
+            scene_image_url = replicate_client.run(
+                "black-forest-labs/flux-kontext-max",
+                input={
+                    "prompt": scene_config["flux-kontext-prompt"],
+                    "input_image": reference_image_url,
+                    "go_fast": False,
+                    "aspect_ratio": "9:16", 
+                    "output_format": "jpg",
+                    "prompt_upsampling": False
+                }
+            )
+            
+            # 결과 URL 처리
+            if hasattr(scene_image_url, 'url'):
+                image_url = scene_image_url.url
+            elif isinstance(scene_image_url, str):
+                image_url = scene_image_url
+            else:
+                image_url = str(scene_image_url)
+            
+            state.scenes_image_list.append(image_url)
+            print(f"장면 {i+1} 이미지 생성 완료: {image_url}")
+            
+        except Exception as e:
+            print(f"장면 {i+1} 이미지 생성 중 오류: {e}")
+            continue
+    
+    print(f"\n이미지 생성 완료: {len(state.scenes_image_list)}/{len(state.scenes)}개")
     return state
 
-def create_scene_image_prompt(scene_content: str):
-    prompt = f"""
-TASK:
-1. Based on the given action scene description, generate exactly one image representing the very first frame of the scene only.
-2. Analyze the provided input image (store or product photo) to extract key visual elements such as brand colors, textures, signature product shapes, and overall style.
-3. Do NOT copy or reuse the input image directly — the scene must be fully reinterpreted.
-4. Create only the first frame image; leave the depiction of the rest of the scene to the video AI.
-5. If new elements are needed, add them in a way that aligns with the brand identity.
-
-ACTION SCENE:  
-"{scene_content}"
-
-OUTPUT REQUIREMENTS:
-- Generate exactly ONE image.
-- No collage, split-screen, diptych, triptych, or multiple frames.
-- Maintain consistent perspective, lighting, and atmosphere throughout.
-- Use realistic photographic quality suitable for a video frame.
-- Ensure no text or watermarks are present.
-"""
-    return prompt
-
-def translate_scenes_to_english(scenes):
-    """액션 씬 내용들을 순서대로 영어로 번역"""
+def generate_scene_config_for_flux_kontext(openai_client, state, scene, scene_index):
+    """
+    GPT-4o를 사용하여 장면 분석 후 참고 이미지 선택 및 flux-kontext 프롬프트 생성
+    """
+    system_message = create_system_message()
+    user_prompt = create_user_prompt(state, scene, scene_index)
     
-    # 모든 액션 씬 내용을 순서대로 수집
-    contents = [scene.content for scene in scenes]
+    messages = [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": user_prompt}
+    ]
     
-    # 번역 프롬프트 생성
-    prompt_template = PromptTemplate(
-        input_variables=["contents"],
-        template="""
-당신은 마케팅 및 영상 제작 콘텐츠를 전문으로 번역하는 전문 번역가입니다.
-
-다음 한국어 액션 씬 설명을 영어로 번역하세요. 단, 다음 사항을 유지해야 합니다:
-	1.	장면의 순서를 정확히 유지할 것
-	2.	모든 카메라 및 시각적 세부사항을 그대로 보존할 것
-	3.	마케팅 효과와 감정적인 톤을 유지할 것
-	4.	전문 영상 제작 용어를 사용할 것
-
-한국어 액션 씬 내용:
-{contents}
-
-요구사항:
-	•	각 장면 설명을 정확히 번역할 것
-	•	카메라 앵글, 움직임, 조명, 색상에 대한 설명을 모두 유지할 것
-	•	5초 장면 타이밍 맥락을 유지할 것
-	•	전문 영상 제작 영어 용어를 사용할 것
-	•	출력은 반드시 동일한 순서의 JSON 배열 형태로만 반환할 것. 코드블록 사용 금지
-
-출력 형식:
-["translated scene 1", "translated scene 2", "translated scene 3", ...]
-"""
-    )
-    
-    llm = ChatOpenAI(temperature=0.3, model="gpt-4o-mini", api_key=settings.openai_api_key)
-    chain = prompt_template | llm | StrOutputParser()
-    
-    # 내용들을 문자열로 변환 (번호와 함께)
-    numbered_contents = []
-    for i, content in enumerate(contents, 1):
-        numbered_contents.append(f"{i}. {content}")
-    
-    contents_str = "\n\n".join(numbered_contents)
-    
-    result = chain.invoke({"contents": contents_str})
-    
-    print("API결과: ", result)
-
-    # JSON 파싱해서 리스트 반환
     try:
-        # JSON 형태로 응답이 온 경우 파싱
-        if result.strip().startswith('['):
-            return json.loads(result.strip())
-        else:
-            # 일반 텍스트로 온 경우 줄바꿈으로 분리
-            lines = result.strip().split('\n')
-            return [line.strip() for line in lines if line.strip()]
-    except json.JSONDecodeError:
-        # JSON 파싱 실패시 원본 내용 반환
-        return contents
+        response = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            max_tokens=1500,
+            temperature=0.3
+        )
+        
+        response_text = response.choices[0].message.content.strip()
+        print(f"GPT-4o 분석 결과: {response_text}")
+        
+        # JSON 파싱
+        try:
+            scene_config = json.loads(response_text)
+            return scene_config
+        except json.JSONDecodeError:
+            # 코드 블록으로 감싸진 경우 처리
+            if "```json" in response_text:
+                json_text = response_text.split("```json")[1].split("```")[0].strip()
+                scene_config = json.loads(json_text)
+                return scene_config
+            else:
+                print(f"JSON 파싱 실패: {response_text}")
+                return None
+        
+    except Exception as e:
+        print(f"GPT-4o 호출 오류: {e}")
+        return None
+
+def create_system_message():
+    return """당신은 영상 제작에서 각 장면의 첫 프레임 이미지 생성을 담당하는 전문가입니다.
+
+🎯 **역할**: 
+- 장면 설명을 분석하여 첫 프레임에 적합한 참고 이미지를 선정
+- flux-kontext-max AI가 첫 프레임 이미지를 생성할 수 있는 최적의 프롬프트 작성
+
+📋 **분석 과정**:
+1. 장면의 첫 프레임에 어떤 시각적 요소가 필요한지 파악
+2. 전체 영상 스타일 가이드(scene_summary)를 바탕으로 일관성 유지 방향 결정
+3. 제공된 이미지들 중 가장 적합한 참고 이미지 선택
+4. flux-kontext-max가 이해하기 쉬운 영어 프롬프트 생성
+
+🔧 **선택 기준**:
+- 장면의 주요 객체/소품과 일치하는 이미지
+- 원하는 분위기/색감을 구현할 수 있는 이미지  
+- 브랜드 아이덴티티를 잘 반영하는 이미지
+
+📦 **출력 형식** (JSON만, 코드 블록이나 추가 설명 금지):
+{
+  "image_index": [0, 1],
+  "flux-kontext-prompt": "A detailed English prompt for flux-kontext-max describing the first frame of the scene, incorporating visual style consistency and brand elements from reference images."
+}
+
+⚠️ **제약사항**:
+- image_index는 반드시 배열 형태 (단일 이미지도 [0] 형태)
+- flux-kontext-prompt는 영어로 작성
+- 첫 프레임만을 위한 프롬프트 (전체 장면 아님)
+- 구체적이고 명확한 시각적 묘사 포함"""
+
+def create_user_prompt(state, scene, scene_index):
+    prompt = f"""다음 장면의 첫 프레임 이미지 생성을 위해 참고 이미지를 선택하고 프롬프트를 작성해주세요:
+
+📌 현재 장면 (장면 {scene_index + 1}):
+제목: {scene.title}
+설명: {scene.content}
+
+📌 전체 스타일 가이드:
+{state.scene_summary if state.scene_summary else '스타일 가이드 없음'}
+
+📌 매장 정보:
+- 매장명: {state.store_name}
+- 업종: {state.business_type}  
+- 브랜드 컨셉: {', '.join(state.brand_concept)}
+
+📌 참고 가능한 이미지들:"""
+
+    for i, img_info in enumerate(state.image_list):
+        main_objects = ", ".join(img_info.main_objects) if img_info.main_objects else "분석되지 않음"
+        description = img_info.description if img_info.description else "설명 없음"
+        prompt += f"""
+이미지 {i}: 
+- 핵심 요소: {main_objects}
+- 설명: {description}"""
+
+    prompt += f"""
+
+위 정보를 바탕으로:
+1. 이 장면의 첫 프레임에 가장 적합한 참고 이미지를 선택하세요
+2. 선택한 이미지들과 스타일 가이드를 반영한 flux-kontext 프롬프트를 작성하세요
+3. 브랜드 일관성을 유지하면서도 이 장면만의 특색을 살려주세요
+
+JSON 형식으로만 응답해주세요."""
+
+    return prompt
