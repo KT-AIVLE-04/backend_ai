@@ -41,7 +41,7 @@ def build_flux_prompt(scene: str, summary: str) -> str:
 def generate_all_flux_prompts(state: State) -> State:
     flux_prompts = []
 
-    for scene_id, scene_data in state.action_scenes.items():
+    for scene_id, scene_data in state.scenes.items():
         scene = scene_data["장면 제목"]
         summary = scene_data["장면 설명"]
 

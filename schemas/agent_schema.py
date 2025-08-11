@@ -29,18 +29,18 @@ class ScenarioResponse(BaseModel):
     session_id: str
     scenarios: List[Scenario] = Field(default_factory=list)
 
-class ActionScene(BaseModel):
+class Scene(BaseModel):
     title: str
     content: str
 
-class ActionScenesRequest(BaseModel):
+class ScenesRequest(BaseModel):
     session_id: str
     title: str
     content: str
     ad_duration: int
 
-class ActionScenesResponse(BaseModel):
+class ScenesResponse(BaseModel):
     session_id: str
-    scenes: List[ActionScene]
+    scenes: List[Scene]
     scenes_image_list: List[str]
     ai_scenes_image_list: List[str]

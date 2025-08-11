@@ -1,20 +1,20 @@
-# nodes/action_scene_generator.py
+# nodes/cene_generator.py
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
-from schemas.agent_schema import ActionScene
+from schemas.agent_schema import Scene
 from states.agent_state import State
 from config.settings import settings
 import json, re, ast
 
 
-def generate_action_scenes(state: State) -> State:
+def generate_scenes(state: State) -> State:
 
-    action_scenes_prompt = create_action_scenes_prompt_template()
+    scenes_prompt = create_scenes_prompt_template()
 
     llm = ChatOpenAI(temperature = 0.7, model = "gpt-4o", streaming = True, api_key=settings.openai_api_key)
-    chain_action_scenes = action_scenes_prompt | llm | StrOutputParser()
-    action_scenes = chain_action_scenes.invoke({
+    chain_scenes = scenes_prompt | llm | StrOutputParser()
+    scenes = chain_scenes.invoke({
         'business_type': state.business_type,
         'brand_concept': state.brand_concept,
         'platform': state.platform,
@@ -26,30 +26,30 @@ def generate_action_scenes(state: State) -> State:
         'scene_count': state.ad_duration // 5
     })
 
-    action_scenes = extract_json(action_scenes)
+    scenes = extract_json(scenes)
     
-    if action_scenes:
-        for scene_info in action_scenes:
-            action_scene = ActionScene(
+    if scenes:
+        for scene_info in scenes:
+            scene = Scene(
                 title=scene_info['장면 제목'],
                 content=scene_info['장면 설명']
             )
-            state.action_scenes.append(action_scene)
+            state.scenes.append(scene)
     else:
-        print("Warning: Failed to parse action scenes JSON")
+        print("Warning: Failed to parse scenes JSON")
 
-    print(state.action_scenes)
+    print(state.scenes)
     return state
 
 
-def create_action_scenes_prompt_template():
+def create_scenes_prompt_template():
 
     prompt_template = PromptTemplate(
         input_variables = ["business_type", "brand_concept", "platform", "ad_type", "target_audience", "scenario_prompt", "scenario_title", "scenario_content", "scene_count"],
         template ="""
 당신은 수백만 조회수를 만든 SNS 바이럴 영상 전문가입니다.  
 소비자의 감정을 사로잡고 매장을 방문하게 만들 수 있도록,  
-주어진 시나리오를 기반으로 **영상 AI가 인식 가능한 {scene_count}개의 장면**으로 분할 구성해주세요.
+주어진 매장 정보, 광고 조건, 시나리오를 분석한 후 그 내용 기반으로 **영상 AI가 인식 가능한 {scene_count}개의 장면**으로 분할 구성해주세요.
 
 📌 매장 정보:
 - 업종: {business_type}

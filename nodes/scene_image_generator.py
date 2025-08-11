@@ -8,20 +8,20 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 import json
 
-def generate_action_scene_images(state: State) -> State:
+def generate_scene_images(state: State) -> State:
     client = replicate.Client(api_token=settings.replicate_api_key)
 
     # 액션 씬 내용들을 영어로 번역
-    translated_contents = translate_action_scenes_to_english(state.action_scenes)
+    translated_contents = translate_scenes_to_english(state.scenes)
 
     combined_image_url = combine_images(state.image_list)
     
-    for i, action_scene in enumerate(state.action_scenes):
+    for i, scene in enumerate(state.scenes):
         # 번역된 내용 사용
-        action_scene_content = translated_contents[i]
-        prompt = create_action_scene_image_prompt(action_scene_content)
+        scene_content = translated_contents[i]
+        prompt = create_scene_image_prompt(scene_content)
 
-        action_scene_image_url = client.run(
+        scene_image_url = client.run(
             "black-forest-labs/flux-kontext-max",
             input={
                 "prompt": prompt,
@@ -34,19 +34,19 @@ def generate_action_scene_images(state: State) -> State:
         )
 
         # FileOutput 객체를 URL 문자열로 변환
-        if hasattr(action_scene_image_url, 'url'):
-            image_url = action_scene_image_url.url
-        elif isinstance(action_scene_image_url, str):
-            image_url = action_scene_image_url
+        if hasattr(scene_image_url, 'url'):
+            image_url = scene_image_url.url
+        elif isinstance(scene_image_url, str):
+            image_url = scene_image_url
         else:
-            image_url = str(action_scene_image_url)
+            image_url = str(scene_image_url)
         
         print(image_url)
-        state.action_scenes_image_list.append(image_url)
+        state.scenes_image_list.append(image_url)
 
     return state
 
-def create_action_scene_image_prompt(action_scene_content: str):
+def create_scene_image_prompt(scene_content: str):
     prompt = f"""
 TASK:
 1. Based on the given action scene description, generate exactly one image representing the very first frame of the scene only.
@@ -56,7 +56,7 @@ TASK:
 5. If new elements are needed, add them in a way that aligns with the brand identity.
 
 ACTION SCENE:  
-"{action_scene_content}"
+"{scene_content}"
 
 OUTPUT REQUIREMENTS:
 - Generate exactly ONE image.
@@ -67,11 +67,11 @@ OUTPUT REQUIREMENTS:
 """
     return prompt
 
-def translate_action_scenes_to_english(action_scenes):
+def translate_scenes_to_english(scenes):
     """액션 씬 내용들을 순서대로 영어로 번역"""
     
     # 모든 액션 씬 내용을 순서대로 수집
-    contents = [scene.content for scene in action_scenes]
+    contents = [scene.content for scene in scenes]
     
     # 번역 프롬프트 생성
     prompt_template = PromptTemplate(

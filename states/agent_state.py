@@ -2,7 +2,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 
-from schemas.agent_schema import ActionScene, Scenario
+from schemas.agent_schema import Scene, Scenario
 
 class State(BaseModel):
     # 초기에 필요한 필드들
@@ -28,5 +28,5 @@ class State(BaseModel):
     ad_duration: int = 15 # default
     scenarios: List[Scenario] = Field(default_factory=list)  # {"title", "content"}
     final_scenario: Optional[Scenario] = None  # {"title", "content"}
-    action_scenes: List[ActionScene] = Field(default_factory=list)
-    action_scenes_image_list: List[str] = Field(default_factory=list)
+    scenes: List[Scene] = Field(default_factory=list)
+    scenes_image_list: List[str] = Field(default_factory=list)
