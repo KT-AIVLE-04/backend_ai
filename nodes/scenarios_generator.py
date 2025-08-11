@@ -34,22 +34,11 @@ def generate_scenarios(state: State, api_key=settings.openai_api_key) -> State:
     # User 프롬프트 생성
     prompt = create_scenario_prompt(state)
 
+    print("프롬프트:")
+    print(prompt)
+
     # 메시지 구성 시작
     content_parts = [{"type": "text", "text": prompt}]
-    
-    # 이미지 처리 및 추가
-    for i, url in enumerate(state.image_list):
-        print(f"이미지 {i+1} 처리 중: {url}")
-        encoded_image = download_and_encode_image(url)
-        if encoded_image:
-            content_parts.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{encoded_image}",
-                    "detail": "low"  # "auto", "low", "high" 중 선택
-                }
-            })
-            print(f"이미지 {i+1} 추가 완료")
 
     # 최종 메시지 구성
     messages = [
@@ -123,8 +112,22 @@ def create_scenario_prompt(state: State) -> str:
 6. ‘특별 요구사항’은 반드시 반영해주세요.
 7. **텍스트, 자막, 대사, 설명 문구는 포함하지 말고**, **오직 장면의 흐름만 묘사해주세요.**
 
-📌 이미지 활용 지침:
-제공된 {len(state.image_list)}장의 이미지를 모두 분석하고, **시나리오 장면 속에 구체적이고 자연스럽게 반영**해주세요.
+📌 제공된 이미지 반영 지침:"""
+
+    # 이미지 분석 결과 추가
+    for i, img_info in enumerate(state.image_list):
+        main_objects_str = ", ".join(img_info.main_objects) if img_info.main_objects else ""
+        description = img_info.description if img_info.description else ""
+        prompt += f"""
+이미지 {i+1}:
+- 핵심 요소: {main_objects_str}
+- 설명: {description}
+"""
+
+    prompt += """
+
+위 이미지 정보를 바탕으로, **모든 핵심 요소들을 시나리오에 자연스럽게 활용**해주세요.
+각 시나리오마다 다양한 조합으로 이 요소들을 창의적으로 배치하여 독창적인 장면을 만들어주세요.
 """
 
     return prompt

@@ -1,7 +1,5 @@
-# nodes/cene_generator.py
-from langchain_openai import ChatOpenAI
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
+# nodes/scene_generator.py
+from openai import OpenAI
 from schemas.agent_schema import Scene
 from states.agent_state import State
 from config.settings import settings
@@ -9,104 +7,111 @@ import json, re, ast
 
 
 def generate_scenes(state: State) -> State:
-
-    scenes_prompt = create_scenes_prompt_template()
-
-    llm = ChatOpenAI(temperature = 0.7, model = "gpt-4o", streaming = True, api_key=settings.openai_api_key)
-    chain_scenes = scenes_prompt | llm | StrOutputParser()
-    scenes = chain_scenes.invoke({
-        'business_type': state.business_type,
-        'brand_concept': state.brand_concept,
-        'platform': state.platform,
-        'ad_type': state.ad_type,
-        'target_audience': state.target_audience,
-        'scenario_prompt': state.scenario_prompt,
-        'scenario_title': state.final_scenario.title,
-        'scenario_content': state.final_scenario.content,
-        'scene_count': state.ad_duration // 5
-    })
-
-    scenes = extract_json(scenes)
+    # OpenAI 클라이언트 초기화
+    client = OpenAI(api_key=settings.openai_api_key)
     
-    if scenes:
-        for scene_info in scenes:
-            scene = Scene(
-                title=scene_info['장면 제목'],
-                content=scene_info['장면 설명']
-            )
-            state.scenes.append(scene)
-    else:
-        print("Warning: Failed to parse scenes JSON")
+    # 시스템 메시지와 사용자 프롬프트 생성
+    system_message = create_system_message()
+    user_prompt = create_user_prompt(state)
+    
+    # 메시지 구성
+    messages = [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": user_prompt}
+    ]
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            max_tokens=2000,
+            temperature=0.7
+        )
+        
+        content = response.choices[0].message.content.strip()
+        print(f"API 응답: {content}")
+        
+        scenes_data = extract_json(content)
+        
+        if scenes_data:
+            for scene_info in scenes_data:
+                scene = Scene(
+                    title=scene_info['장면 제목'],
+                    content=scene_info['장면 설명']
+                )
+                state.scenes.append(scene)
+        else:
+            print("Warning: Failed to parse scenes JSON")
 
-    print(state.scenes)
-    return state
+        print(state.scenes)
+        return state
+        
+    except Exception as e:
+        print(f"장면 생성 중 오류 발생: {e}")
+        return state
 
 
-def create_scenes_prompt_template():
-
-    prompt_template = PromptTemplate(
-        input_variables = ["business_type", "brand_concept", "platform", "ad_type", "target_audience", "scenario_prompt", "scenario_title", "scenario_content", "scene_count"],
-        template ="""
-당신은 수백만 조회수를 만든 SNS 바이럴 영상 전문가입니다.  
-소비자의 감정을 사로잡고 매장을 방문하게 만들 수 있도록,  
-주어진 매장 정보, 광고 조건, 시나리오를 분석한 후 그 내용 기반으로 **영상 AI가 인식 가능한 {scene_count}개의 장면**으로 분할 구성해주세요.
-
-📌 매장 정보:
-- 업종: {business_type}
-- 브랜드 컨셉: {brand_concept}
-
-📌 광고 조건:
-- 플랫폼: {platform}
-- 광고 유형: {ad_type}
-- 타겟 고객: {target_audience}
-- 특별 요구사항: {scenario_prompt} ※ 반드시 반영해주세요.
-
-📌 시나리오 정보:
-- 시나리오 제목: {scenario_title}
-- 시나리오 내용: {scenario_content}
-
----
+def create_system_message():
+    return """당신은 수백만 조회수를 만든 SNS 바이럴 영상 전문가입니다.
 
 🎯 **장면 구성 원칙**
+1. 각 장면은 **정확히 5초 분량**이어야 합니다.
+   - **하드 컷 전환**으로 각 장면이 명확히 구분되고, **장면 간 소재·연출이 절대 중복되지 않게** 작성하세요.
 
-1. 총 {scene_count}개의 독립된 장면을 작성해주세요.  
-   - 각 장면은 **5초 분량**입니다.  
-   - **하드 컷 전환**으로 각 장면이 명확히 구분되어야 하며, **장면 간 소재 또는 연출이 겹치지 않아야 합니다.**
+2. 각 장면은 **Hook → 중간 전달 → 강렬한 마무리** 구조를 포함합니다.
+   - 첫 2초: 시선을 끄는 연출
+   - 중간: 제품/공간 핵심 요소 전달
+   - 마지막 1~2초: 잔상·임팩트 마무리
 
-2. **Hook → 중간 전달 → 강렬한 마무리** 구조를 장면 내에 포함해주세요.  
-   - 예: 첫 2초에 시선을 끄는 연출 → 중간에 제품/공간의 핵심 요소 전달 → 마지막 1~2초에 잔상이나 임팩트 마무리.
+3. 제품 특성을 극대화한 참신하고 독창적인 연출 필수
+   - 영화적·마법적 시각효과, 시간 흐름/공간 변형/사물 변신 등 창의적 아이디어 포함
 
-3. **제품 특성을 최대한 활용하여, 참신하고 창의적이며 독특한 연출**을 포함해주세요.  
-   - 제품 또는 서비스가 가진 특징을 시각적으로 극대화하고,  
-   - 제품의 특징을 극대화하기 위한 ‘영화적’이거나 ‘마법‘ 같은 느낌을 주는 비주얼을 포함해주세요.  
-   - 시간의 흐름, 공간 변형, 사물의 변신 등 독창적인 아이디어를 적극 반영해주세요.
+4. **촬영·시각 표현 가이드**
+   - 카메라 용어 필수: 드론 뷰, 클로즈업, 팬, 틸트, 줌, 슬로모션 등
+   - 시각 요소 필수: 색감, 질감, 조명, 배경, 소품, 움직임 등 구체적으로
+   - 금지: 텍스트/자막/대사/나레이션, 복잡한 스토리·은유
 
-4. **촬영 및 시각 표현 가이드**
-   - **카메라 표현 필수**: 드론 뷰, 클로즈업, 팬, 틸트, 줌, 슬로우 모션 등 기술적 용어 사용
-   - **시각적 요소 표현 필수**: 색감, 질감, 조명, 배경, 소품, 움직임 등을 **AI가 구현 가능하도록 구체적**으로 묘사
-   - **제한 사항**:
-     - 텍스트, 자막, 대사, 나레이션 금지
-     - 복잡한 스토리라인, 추상적 표현, 은유적 설명 금지
-
----
-
-📦 **출력 형식** (아래 형식으로만 응답해주세요. 다른 설명 금지):
-
+📦 **출력 규칙**
+- **JSON 배열**만 출력 (코드 블록, 추가 설명, 서두·마무리 문장 금지)
+- 각 장면은 다음 형식:
 [
-    {{
-        "장면 제목": "첫 번째 장면의 Hook 제목 (간결하고 주목도 높은 문장)",
-        "장면 설명": "5초 분량의 구체적인 장면 묘사를 3~4문장으로 작성해주세요. 각 장면은 시각적 장면을 중심으로 카메라 움직임, 조명, 배경, 색감, 소품의 상태와 움직임 등을 명확하게 설명해야 하며, 비디오 생성 AI가 바로 적용할 수 있도록 상세히 기술해주세요."
-    }},
-    {{
-        "장면 제목": "두 번째 장면의 Hook 제목",
-        "장면 설명": "5초 분량의 구체적인 장면 묘사..."
-    }},
-    ...
+  {
+    "장면 제목": "Hook 제목 (간결·주목도 높은 문장)",
+    "장면 설명": "5초 분량의 장면을 마침표 기준 3~4문장으로 구체 묘사. 카메라 움직임, 조명, 배경, 색감, 소품 상태와 움직임을 상세 기술."
+  }
 ]
 """
-    )
 
-    return prompt_template
+def create_user_prompt(state: State):
+    scene_count = state.ad_duration // 5
+    
+    prompt = f"""다음 정보를 바탕으로 **정확히 {scene_count}개의 장면**을 생성하세요.
+- 각 장면은 반드시 5초 분량입니다.
+- 출력은 JSON 배열 형식만 사용하세요. 코드 블록, 추가 설명 금지.
+
+📌 매장 정보:
+- 업종: {state.business_type}
+- 매장명: {state.store_name}
+- 브랜드 컨셉: {', '.join(state.brand_concept)}
+
+📌 광고 조건:
+- 플랫폼: {state.platform}
+- 광고 유형: {state.ad_type}
+- 타겟 고객: {state.target_audience}
+- 특별 요구사항: {state.scenario_prompt} ※ 반드시 반영
+
+📌 시나리오:
+- 제목: {state.final_scenario.title}
+- 내용: {state.final_scenario.content}"""
+
+    if state.image_list and any(img.main_objects or img.description for img in state.image_list):
+        prompt += "\n\n📌 활용해야 할 이미지 요소 (각 장면에 최소 1개 이상 반영):"
+        for i, img_info in enumerate(state.image_list):
+            main_objects = ", ".join(img_info.main_objects) if img_info.main_objects else ""
+            description = img_info.description if img_info.description else ""
+            prompt += f"\n- 이미지 {i+1}: {main_objects} ({description})"
+    
+    return prompt
 
 def extract_json(content: str):
     match = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", content)
@@ -122,5 +127,5 @@ def extract_json(content: str):
     except json.JSONDecodeError:
         try:
             return ast.literal_eval(cleaned)
-        except Exception as e:
+        except Exception:
             return None

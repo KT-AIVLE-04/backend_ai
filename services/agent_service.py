@@ -46,4 +46,12 @@ def resume_agent_flow(
     print(resumed_result)
     print(type(resumed_result))
 
-    return ScenesResponse(session_id=session_id, scenes=resumed_result["scenes"], scenes_image_list=resumed_result["image_list"], ai_scenes_image_list=resumed_result["scenes_image_list"])
+    # image_list에서 URL들을 추출하여 scenes_image_list에 담기
+    input_image_urls = [img_info.url for img_info in resumed_result["image_list"]]
+    
+    return ScenesResponse(
+        session_id=session_id, 
+        scenes=resumed_result["scenes"], 
+        scenes_image_list=input_image_urls, 
+        ai_scenes_image_list=resumed_result["scenes_image_list"]
+    )
