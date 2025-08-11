@@ -3,13 +3,19 @@ import uuid
 from core.agent_graph import graph
 from langgraph.types import Command
 from states.agent_state import State
-from schemas.agent_schema import ScenesResponse, Scenario, ScenarioRequest, ScenarioResponse, ScenesRequest
+from schemas.agent_schema import ScenesResponse, Scenario, ScenarioRequest, ScenarioResponse, ScenesRequest, InputImageInfo
 
 def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
      # 새로운 세션 ID 생성
     session_id = str(uuid.uuid4())
     
-    state = State(**payload.model_dump())
+    # payload의 image_list를 InputImageInfo 객체들로 변환
+    payload_dict = payload.model_dump()
+    payload_dict["image_list"] = [
+        InputImageInfo(url=url) for url in payload.image_list
+    ]
+    
+    state = State(**payload_dict)
 
     result = graph.invoke(
         state,

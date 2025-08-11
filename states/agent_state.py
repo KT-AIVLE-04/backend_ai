@@ -2,7 +2,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 
-from schemas.agent_schema import Scene, Scenario
+from schemas.agent_schema import InputImageInfo, Scene, Scenario
 
 class State(BaseModel):
     # 초기에 필요한 필드들
@@ -14,7 +14,7 @@ class State(BaseModel):
     brand_concept: List[str]
 
     #이미지 리스트
-    image_list: List[str]
+    image_list: List[InputImageInfo]
 
     # 광고 정보
     platform: str

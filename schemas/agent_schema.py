@@ -44,3 +44,8 @@ class ScenesResponse(BaseModel):
     scenes: List[Scene]
     scenes_image_list: List[str]
     ai_scenes_image_list: List[str]
+
+class InputImageInfo(BaseModel):
+    url: str
+    main_objects: List[str] = Field(default_factory=list)
+    description: str = ""
