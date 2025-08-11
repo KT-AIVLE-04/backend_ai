@@ -3,6 +3,7 @@ import os
 from config.settings import settings
 import openai
 import json
+from repositories.in_memory_ad_style_repository import InMemoryAdStyleRepository
 from states.agent_state import State
 from utils.image_utils import download_and_encode_image
 from schemas.agent_schema import Scenario
@@ -18,7 +19,6 @@ def generate_scenarios(state: State, api_key=settings.openai_api_key) -> State:
 다음 규칙을 반드시 준수해주세요:
 1. 동영상 촬영 기법(예: 카메라 무빙, 앵글, 렌즈 등)은 절대 포함하지 마세요. 오직 장면의 연속적인 스토리만 작성하세요.
 2. 텍스트, 자막, 대사, 나레이션은 포함하지 마세요.
-3. 인물(사람, 손, 얼굴 등)은 절대 등장하지 않게 하세요.
 
 응답 형식은 아래와 같이 JSON 배열로만 작성하세요. 코드 블록을 사용하지 마세요.
 
@@ -84,10 +84,14 @@ def generate_scenarios(state: State, api_key=settings.openai_api_key) -> State:
         return state
 
 def create_scenario_prompt(state: State) -> str:
+
+    repository = InMemoryAdStyleRepository()
+    ad_style_list = repository.get_top3_ad_styles_by_business_type(state.business_type)
+
     prompt = f"""
 🎯 목표:
 경쟁이 치열한 숏폼 플랫폼에서 **시청자의 시선을 단번에 사로잡을 만큼 독창적이고 감각적인 시나리오** 3가지를 작성해주세요.
-각 시나리오는 약 24초 분량이며, **스토리 형식의 장면 설명으로 150자 이상** 작성해주세요.
+각 시나리오는 **스토리 형식의 장면 설명으로 150자 이상** 작성해주세요.
 
 ✨ 창의성 강조:
 - 누구나 한 번 보면 기억에 남을 정도로 **강렬하고 신선한 발상**을 담아주세요.
@@ -107,12 +111,16 @@ def create_scenario_prompt(state: State) -> str:
 - 특별 요구사항: {state.scenario_prompt}
 
 📌 시나리오 작성 지침:
-1. 브랜드 컨셉과 제품의 특성이 **직관적으로 시각화**될 수 있도록 색감, 분위기, 소품 등을 설정해주세요.
-2. 해당 플랫폼의 숏폼 광고 흐름(3-컷 구성 등)을 참고하여 **시작-전개-임팩트 마무리** 흐름으로 구성해주세요.
-3. 광고 유형에 맞게 **자연스럽고 세련된** 장면 구성을 해주세요.
-4. 타겟 고객이 흥미를 느낄 수 있도록 **감각적이고 반전 있는 장면 연출**에 집중해주세요.
-5. ‘특별 요구사항’은 반드시 반영해주세요.
-6. **텍스트, 자막, 대사, 설명 문구는 포함하지 말고**, **오직 장면의 흐름만 묘사해주세요.**
+1.	세 가지 시나리오는 각각 다른 스타일로 작성하세요.
+   - 첫번째 시나리오 스타일: {ad_style_list[0]}
+   - 두번째 시나리오 스타일: {ad_style_list[1]}
+   - 세번째 시나리오 스타일: {ad_style_list[2]}
+2. 브랜드 컨셉과 제품의 특성이 **직관적으로 시각화**될 수 있도록 색감, 분위기, 소품 등을 설정해주세요.
+3. 해당 플랫폼의 숏폼 광고 흐름(3-컷 구성 등)을 참고하여 **시작-전개-임팩트 마무리** 흐름으로 구성해주세요.
+4. 광고 유형에 맞게 **자연스럽고 세련된** 장면 구성을 해주세요.
+5. 타겟 고객이 흥미를 느낄 수 있도록 **감각적이고 반전 있는 장면 연출**에 집중해주세요.
+6. ‘특별 요구사항’은 반드시 반영해주세요.
+7. **텍스트, 자막, 대사, 설명 문구는 포함하지 말고**, **오직 장면의 흐름만 묘사해주세요.**
 
 📌 이미지 활용 지침:
 제공된 {len(state.image_list)}장의 이미지를 모두 분석하고, **시나리오 장면 속에 구체적이고 자연스럽게 반영**해주세요.
