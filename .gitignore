@@ -1,3 +1,5 @@
 dockerfile
 .env
 chaos/
+test_mj.py
+image.png
