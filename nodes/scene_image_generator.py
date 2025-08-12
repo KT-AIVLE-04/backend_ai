@@ -35,24 +35,31 @@ def generate_scene_images(state: State) -> State:
             ]
             
             if not selected_image_urls:
-                print(f"장면 {i+1}: 참고할 이미지가 없어 건너뜁니다.")
-                continue
+                scene_image_url = replicate_client.run(
+                    "black-forest-labs/flux-kontext-max",
+                    input={
+                        "prompt": scene_config["flux-kontext-prompt"],
+                        "go_fast": False,
+                        "aspect_ratio": "9:16", 
+                        "output_format": "jpg",
+                        "prompt_upsampling": False
+                    }
+                )
+            else:
+                # 참고 이미지 합성
+                reference_image_url = combine_images(selected_image_urls)
                 
-            # 참고 이미지 합성
-            reference_image_url = combine_images(selected_image_urls)
-            
-            # flux-kontext-max로 이미지 생성
-            scene_image_url = replicate_client.run(
-                "black-forest-labs/flux-kontext-max",
-                input={
-                    "prompt": scene_config["flux-kontext-prompt"],
-                    "input_image": reference_image_url,
-                    "go_fast": False,
-                    "aspect_ratio": "9:16", 
-                    "output_format": "jpg",
-                    "prompt_upsampling": False
-                }
-            )
+                scene_image_url = replicate_client.run(
+                    "black-forest-labs/flux-kontext-max",
+                    input={
+                        "prompt": scene_config["flux-kontext-prompt"],
+                        "input_image": reference_image_url,
+                        "go_fast": False,
+                        "aspect_ratio": "9:16", 
+                        "output_format": "jpg",
+                        "prompt_upsampling": False
+                    }
+                )
             
             # 결과 URL 처리
             if hasattr(scene_image_url, 'url'):
@@ -130,6 +137,7 @@ def create_system_message():
 - 장면의 주요 객체/소품과 일치하는 이미지
 - 원하는 분위기/색감을 구현할 수 있는 이미지  
 - 브랜드 아이덴티티를 잘 반영하는 이미지
+- 단, 장면의 주요 객체/소품과 일치하는 것이 없다면 image_index를 빈 리스트로 반환
 
 📦 **출력 형식** (JSON만, 코드 블록이나 추가 설명 금지):
 {
