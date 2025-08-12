@@ -149,7 +149,7 @@ def create_system_message():
 - image_index는 반드시 배열 형태 (단일 이미지도 [0] 형태)
 - flux-kontext-prompt는 영어로 작성
 - 첫 프레임만을 위한 프롬프트 (전체 장면 아님)
-- 구체적이고 명확한 시각적 묘사 포함"""
+- **구체적이고 명확한 시각적 묘사만 포함**"""
 
 def create_user_prompt(state, scene, scene_index):
     prompt = f"""다음 장면의 첫 프레임 이미지 생성을 위해 참고 이미지를 선택하고 프롬프트를 작성해주세요:
@@ -158,7 +158,7 @@ def create_user_prompt(state, scene, scene_index):
 제목: {scene.title}
 설명: {scene.content}
 
-📌 전체 스타일 가이드:
+📌 전체 장면 스타일 요약:
 {state.scene_summary if state.scene_summary else '스타일 가이드 없음'}
 
 📌 매장 정보:
@@ -180,7 +180,7 @@ def create_user_prompt(state, scene, scene_index):
 
 위 정보를 바탕으로:
 1. 이 장면의 첫 프레임에 가장 적합한 참고 이미지를 선택하세요
-2. 선택한 이미지들과 스타일 가이드를 반영한 flux-kontext 프롬프트를 작성하세요
+2. 선택한 이미지들과 스타일 요약을 반영한 flux-kontext 프롬프트를 작성하세요
 3. 브랜드 일관성을 유지하면서도 이 장면만의 특색을 살려주세요
 
 JSON 형식으로만 응답해주세요."""
