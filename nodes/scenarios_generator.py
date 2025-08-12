@@ -5,7 +5,6 @@ import openai
 import json
 from repositories.in_memory_ad_style_repository import InMemoryAdStyleRepository
 from states.agent_state import State
-from utils.image_utils import download_and_encode_image
 from schemas.agent_schema import Scenario
 
 
@@ -90,7 +89,6 @@ def create_scenario_prompt(state: State) -> str:
 - 다만, **AI로 실제 영상 생성이 가능한 수준**의 장면 구성으로 제한해주세요.
 
 📌 매장 정보:
-- 매장명: {state.store_name}
 - 업종: {state.business_type}
 - 브랜드 컨셉: {state.brand_concept}
 
@@ -101,7 +99,7 @@ def create_scenario_prompt(state: State) -> str:
 - 특별 요구사항: {state.scenario_prompt}
 
 📌 시나리오 작성 지침:
-1.	세 가지 시나리오는 각각 다른 스타일로 작성하세요.
+1. 세 가지 시나리오는 각각 다른 스타일로 작성하세요.
    - 첫번째 시나리오 스타일: {ad_style_list[0]}
    - 두번째 시나리오 스타일: {ad_style_list[1]}
    - 세번째 시나리오 스타일: {ad_style_list[2]}
@@ -111,23 +109,6 @@ def create_scenario_prompt(state: State) -> str:
 5. 타겟 고객이 흥미를 느낄 수 있도록 **감각적이고 반전 있는 장면 연출**에 집중해주세요.
 6. ‘특별 요구사항’은 반드시 반영해주세요.
 7. **텍스트, 자막, 대사, 설명 문구는 포함하지 말고**, **오직 장면의 흐름만 묘사해주세요.**
-
-📌 제공된 이미지 반영 지침:"""
-
-    # 이미지 분석 결과 추가
-    for i, img_info in enumerate(state.image_list):
-        main_objects_str = ", ".join(img_info.main_objects) if img_info.main_objects else ""
-        description = img_info.description if img_info.description else ""
-        prompt += f"""
-이미지 {i+1}:
-- 핵심 요소: {main_objects_str}
-- 설명: {description}
-"""
-
-    prompt += """
-
-위 이미지 정보를 바탕으로, **모든 핵심 요소들을 시나리오에 자연스럽게 활용**해주세요.
-각 시나리오마다 다양한 조합으로 이 요소들을 창의적으로 배치하여 독창적인 장면을 만들어주세요.
 """
 
     return prompt

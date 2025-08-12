@@ -23,10 +23,10 @@ builder.add_node("generate_scene_images", generate_scene_images)
 builder.add_node("summarize_scenes", summarize_scenes)
 
 # 노드 연결
-builder.set_entry_point("analyse_input_images")
-builder.add_edge("analyse_input_images", "create_scenarios")
+builder.set_entry_point("create_scenarios")
 builder.add_edge("create_scenarios", "user_select_scenario")
-builder.add_edge("user_select_scenario", "generate_scenes")
+builder.add_edge("user_select_scenario", "analyse_input_images")
+builder.add_edge("analyse_input_images", "generate_scenes")
 builder.add_edge("generate_scenes", "summarize_scenes")
 builder.add_edge("summarize_scenes", "generate_scene_images")
 builder.add_edge("generate_scene_images", END)

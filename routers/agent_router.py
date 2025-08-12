@@ -1,7 +1,7 @@
 # routers/agent_router.py
 from fastapi import APIRouter
 from services.agent_service import resume_agent_flow, run_agent_flow
-from schemas.agent_schema import ScenarioRequest, ScenarioResponse, ScenesRequest
+from schemas.agent_schema import ScenarioRequest, ScenarioResponse, VideoRequest
 
 router = APIRouter(prefix="/api/shorts/agent", tags=["Shorts Agent"])
 
@@ -12,9 +12,9 @@ def invoke_agent(payload: ScenarioRequest):
     """
     return run_agent_flow(payload)
 
-@router.post("/action-scenes")
+@router.post("/videos")
 def resume_agent_after_select_scenario(
-    payload: ScenesRequest
+    payload: VideoRequest
 ):
     """
     시나리오 선택 후 LangGraph 마케팅 에이전트를 재개해서 장면/장면이미지 생성 후 결과 반환

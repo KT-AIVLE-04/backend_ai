@@ -91,7 +91,6 @@ def create_user_prompt(state: State):
 
 📌 매장 정보:
 - 업종: {state.business_type}
-- 매장명: {state.store_name}
 - 브랜드 컨셉: {', '.join(state.brand_concept)}
 
 📌 광고 조건:
@@ -105,7 +104,7 @@ def create_user_prompt(state: State):
 - 내용: {state.final_scenario.content}"""
 
     if state.image_list and any(img.main_objects or img.description for img in state.image_list):
-        prompt += "\n\n📌 활용해야 할 이미지 요소 (각 장면에 최소 1개 이상 반영):"
+        prompt += "\n\n📌 활용해야 할 이미지 요소:"
         for i, img_info in enumerate(state.image_list):
             main_objects = ", ".join(img_info.main_objects) if img_info.main_objects else ""
             description = img_info.description if img_info.description else ""

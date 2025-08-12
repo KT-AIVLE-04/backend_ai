@@ -3,19 +3,13 @@ import uuid
 from core.agent_graph import graph
 from langgraph.types import Command
 from states.agent_state import State
-from schemas.agent_schema import ScenesResponse, Scenario, ScenarioRequest, ScenarioResponse, ScenesRequest, InputImageInfo
+from schemas.agent_schema import Scenario, ScenarioRequest, ScenarioResponse, InputImageInfo, VideoRequest, VideoResponse
 
 def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
      # 새로운 세션 ID 생성
     session_id = str(uuid.uuid4())
     
-    # payload의 image_list를 InputImageInfo 객체들로 변환
-    payload_dict = payload.model_dump()
-    payload_dict["image_list"] = [
-        InputImageInfo(url=url) for url in payload.image_list
-    ]
-    
-    state = State(**payload_dict)
+    state = State(**payload.model_dump())
 
     result = graph.invoke(
         state,
@@ -33,25 +27,23 @@ def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
     return ScenarioResponse(session_id=session_id, scenarios=[])
 
 def resume_agent_flow(
-    payload: ScenesRequest
-) -> ScenesResponse:
-    scenario = Scenario(title=payload.title, content=payload.content)
+    payload: VideoRequest
+) -> VideoResponse:
     session_id = payload.session_id
+    scenario = Scenario(title=payload.title, content=payload.content)
+    image_list = [
+        InputImageInfo(url=url) for url in payload.image_list
+    ]
 
     resumed_result = graph.invoke(
-        Command(resume={"final_scenario": scenario, "ad_duration": payload.ad_duration}),
+        Command(resume={"final_scenario": scenario, "ad_duration": payload.ad_duration, "image_list": image_list}),
         config={"configurable": {"thread_id": session_id}}
     )
     
     print(resumed_result)
     print(type(resumed_result))
-
-    # image_list에서 URL들을 추출하여 scenes_image_list에 담기
-    input_image_urls = [img_info.url for img_info in resumed_result["image_list"]]
     
-    return ScenesResponse(
-        session_id=session_id, 
+    return VideoResponse(
         scenes=resumed_result["scenes"], 
-        scenes_image_list=input_image_urls, 
         ai_scenes_image_list=resumed_result["scenes_image_list"]
     )

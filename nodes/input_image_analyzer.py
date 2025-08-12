@@ -3,7 +3,6 @@ import json
 from config.settings import settings
 from openai import OpenAI
 from states.agent_state import State
-import os
 
 client = OpenAI(api_key=settings.openai_api_key)
 
@@ -20,7 +19,7 @@ def analyse_input_images(state: State) -> State:
 
 제공된 이미지들은 {state.business_type} 매장의 사진들입니다. 각 이미지를 분석하여 다음 정보를 JSON 형태로 제공해주세요:
 
-1. main_object: 이미지에서 광고에 활용할 수 있는 핵심 요소들 (예: "딸기케이크", "커피", "매장 내부", "매장 외부" 등)
+1. main_object: 이미지에서 광고에 활용할 수 있는 핵심 요소들 (예: "딸기케이크", "커피", "매장 내부", "매장 외부", "상의 전면" 등)
 2. brand_identity: 이미지에서 파악할 수 있는 브랜드의 분위기나 아이덴티티 (예: "파스텔", "따뜻함", "모던", "빈티지" 등)
 3. description: 이미지에 대한 구체적인 설명 (1-2줄)
 
