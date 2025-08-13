@@ -35,9 +35,17 @@ def combine_images(image_url: List[str]):
     # URL에서 이미지 불러오기
     images = []
     for url in image_url:
-        response = requests.get(url)
-        img = Image.open(BytesIO(response.content))
-        images.append(img)
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            img = Image.open(BytesIO(response.content))
+            images.append(img)
+        except Exception as e:
+            print(f"이미지 로드 실패 ({url}): {e}")
+            continue
+    
+    if not images:
+        raise ValueError("유효한 이미지가 없습니다")
 
     # 이미지 크기 맞추기 (가장 작은 높이에 맞춰 리사이즈)
     min_height = min(img.height for img in images)

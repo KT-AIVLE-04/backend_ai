@@ -9,4 +9,5 @@ def user_select_scenario(state: State) -> State:
 
     state.final_scenario = Scenario(title=result["final_scenario"].title, content=result["final_scenario"].content)
     state.ad_duration = result["ad_duration"]
+    state.image_list = result["image_list"]
     return state

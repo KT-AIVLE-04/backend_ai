@@ -43,7 +43,7 @@ def generate_all_veo_prompts(state: State) -> State:
     # print('\n🏳️ 노드4 결과\n', state)
     veo_prompts = []
 
-    for scene_id, scene_data in state.action_scenes.items():
+    for scene_id, scene_data in state.cenes.items():
         scene = scene_data["장면 제목"]
         summary = scene_data["장면 설명"]
 

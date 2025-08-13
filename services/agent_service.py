@@ -3,7 +3,7 @@ import uuid
 from core.agent_graph import graph
 from langgraph.types import Command
 from states.agent_state import State
-from schemas.agent_schema import ActionScenesResponse, Scenario, ScenarioRequest, ScenarioResponse, ActionScenesRequest
+from schemas.agent_schema import Scenario, ScenarioRequest, ScenarioResponse, InputImageInfo, VideoRequest, VideoResponse
 
 def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
      # 새로운 세션 ID 생성
@@ -27,17 +27,23 @@ def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
     return ScenarioResponse(session_id=session_id, scenarios=[])
 
 def resume_agent_flow(
-    payload: ActionScenesRequest
-) -> ActionScenesResponse:
-    scenario = Scenario(title=payload.title, content=payload.content)
+    payload: VideoRequest
+) -> VideoResponse:
     session_id = payload.session_id
+    scenario = Scenario(title=payload.title, content=payload.content)
+    image_list = [
+        InputImageInfo(url=url) for url in payload.image_list
+    ]
 
     resumed_result = graph.invoke(
-        Command(resume={"final_scenario": scenario, "ad_duration": payload.ad_duration}),
+        Command(resume={"final_scenario": scenario, "ad_duration": payload.ad_duration, "image_list": image_list}),
         config={"configurable": {"thread_id": session_id}}
     )
     
     print(resumed_result)
     print(type(resumed_result))
-
-    return ActionScenesResponse(session_id=session_id, scenes=resumed_result["action_scenes"], scenes_image_list=resumed_result["image_list"], ai_scenes_image_list=resumed_result["action_scenes_image_list"])
+    
+    return VideoResponse(
+        scenes=resumed_result["scenes"], 
+        ai_scenes_image_list=resumed_result["scenes_image_list"]
+    )
