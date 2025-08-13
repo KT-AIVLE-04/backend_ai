@@ -14,9 +14,6 @@ class ScenarioRequest(BaseModel):
     # 브랜드 컨셉
     brand_concept: List[str]
 
-    #이미지 리스트
-    image_list: List[str]
-
     # 광고 정보
     platform: str
     ad_type: str
@@ -29,18 +26,25 @@ class ScenarioResponse(BaseModel):
     session_id: str
     scenarios: List[Scenario] = Field(default_factory=list)
 
-class ActionScene(BaseModel):
+class Scene(BaseModel):
     title: str
     content: str
 
-class ActionScenesRequest(BaseModel):
+class VideoRequest(BaseModel):
     session_id: str
     title: str
     content: str
     ad_duration: int
+    image_list: List[str]
 
-class ActionScenesResponse(BaseModel):
-    session_id: str
-    scenes: List[ActionScene]
-    scenes_image_list: List[str]
+class VideoResponse(BaseModel):
+    # video_url: str
+
+    # TODO: 테스트
+    scenes: List[Scene]
     ai_scenes_image_list: List[str]
+
+class InputImageInfo(BaseModel):
+    url: str
+    main_objects: List[str] = Field(default_factory=list)
+    description: str = ""

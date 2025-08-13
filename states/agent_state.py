@@ -2,7 +2,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 
-from schemas.agent_schema import ActionScene, Scenario
+from schemas.agent_schema import InputImageInfo, Scene, Scenario
 
 class State(BaseModel):
     # 초기에 필요한 필드들
@@ -13,9 +13,6 @@ class State(BaseModel):
     # 브랜드 컨셉
     brand_concept: List[str]
 
-    #이미지 리스트
-    image_list: List[str]
-
     # 광고 정보
     platform: str
     ad_type: str
@@ -25,8 +22,10 @@ class State(BaseModel):
     scenario_prompt: str
 
     # 나중에 채워질 필드들
+    image_list: List[InputImageInfo] = Field(default_factory=list)
     ad_duration: int = 15 # default
     scenarios: List[Scenario] = Field(default_factory=list)  # {"title", "content"}
     final_scenario: Optional[Scenario] = None  # {"title", "content"}
-    action_scenes: List[ActionScene] = Field(default_factory=list)
-    action_scenes_image_list: List[str] = Field(default_factory=list)
+    scenes: List[Scene] = Field(default_factory=list)
+    scenes_image_list: List[str] = Field(default_factory=list)
+    scene_summary: str = ""

@@ -2,9 +2,11 @@
 from typing import Literal
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.redis import RedisSaver
+from nodes.input_image_analyzer import analyse_input_images
+from nodes.scenes_summarizer import summarize_scenes
 import redis
-from nodes.action_scene_generator import generate_action_scenes
-from nodes.action_scene_image_generator import generate_action_scene_images
+from nodes.scene_generator import generate_scenes
+from nodes.scene_image_generator import generate_scene_images
 from nodes.human_select import user_select_scenario
 from states.agent_state import State
 from nodes.scenarios_generator import generate_scenarios
@@ -13,17 +15,21 @@ from nodes.scenarios_generator import generate_scenarios
 builder = StateGraph(State)
 
 # 노드 등록
+builder.add_node("analyse_input_images", analyse_input_images)
 builder.add_node("create_scenarios", generate_scenarios)
 builder.add_node("user_select_scenario", user_select_scenario)
-builder.add_node("generate_scenes", generate_action_scenes)
-builder.add_node("generate_action_scene_images", generate_action_scene_images)
+builder.add_node("generate_scenes", generate_scenes)
+builder.add_node("generate_scene_images", generate_scene_images)
+builder.add_node("summarize_scenes", summarize_scenes)
 
 # 노드 연결
 builder.set_entry_point("create_scenarios")
 builder.add_edge("create_scenarios", "user_select_scenario")
-builder.add_edge("user_select_scenario", "generate_scenes")
-builder.add_edge("generate_scenes", "generate_action_scene_images")
-builder.add_edge("generate_action_scene_images", END)
+builder.add_edge("user_select_scenario", "analyse_input_images")
+builder.add_edge("analyse_input_images", "generate_scenes")
+builder.add_edge("generate_scenes", "summarize_scenes")
+builder.add_edge("summarize_scenes", "generate_scene_images")
+builder.add_edge("generate_scene_images", END)
 
 redis_client = redis.Redis.from_url("redis://localhost:6379")
 checkpointer = RedisSaver(redis_client=redis_client, ttl={"default_ttl": 3600})
