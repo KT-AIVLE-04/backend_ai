@@ -70,6 +70,7 @@ def generate_hashtags(state: SNSPostState) -> SNSPostState:
         - 중복·의미중복(표기차/단복수) 제거
         - 지역/시즌은 입력 맥락 있을 때만 포함(무리한 추가 금지)
         - 플랫폼 한도 초과 금지
+        - **location 값이 비어있거나 None이면, 지역 관련 태그는 생성하지 말고 무시**
         """),
         ("human", """다음 정보를 바탕으로 해시태그를 생성하세요:
         
