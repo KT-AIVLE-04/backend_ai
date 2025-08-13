@@ -4,7 +4,7 @@ pydantic==2.11.5
 pydantic-settings==2.9.1
 
 langchain==0.3.26
-langgraph>=0.2.0
+langgraph>=0.2.46
 langchain-openai==0.3.24
 langchain_core==0.3.66
 langsmith==0.4.1
@@ -21,3 +21,4 @@ redis>=5.2.1
 redisvl>=0.5.1
 langgraph-checkpoint>=2.0.24
 langgraph-checkpoint-redis>=0.1.0
+
