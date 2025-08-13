@@ -1,10 +1,10 @@
 # states/agent_state.py
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
+from typing import List, Optional
 
-from schemas.agent_schema import InputImageInfo, Scene, Scenario
+from schemas.shorts_schema import InputImageInfo, Scene, Scenario
 
-class State(BaseModel):
+class ShortsState(BaseModel):
     # 초기에 필요한 필드들
     # 매장 정보
     store_name: str

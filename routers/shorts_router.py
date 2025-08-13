@@ -1,7 +1,7 @@
 # routers/agent_router.py
 from fastapi import APIRouter
-from services.agent_service import resume_agent_flow, run_agent_flow
-from schemas.agent_schema import ScenarioRequest, ScenarioResponse, VideoRequest
+from services.shorts_service import resume_agent_flow, run_agent_flow
+from schemas.shorts_schema import ScenarioRequest, ScenarioResponse, VideoRequest
 
 router = APIRouter(prefix="/api/shorts/agent", tags=["Shorts Agent"])
 

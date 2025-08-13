@@ -4,11 +4,11 @@ from config.settings import settings
 import openai
 import json
 from repositories.in_memory_ad_style_repository import InMemoryAdStyleRepository
-from states.agent_state import State
-from schemas.agent_schema import Scenario
+from states.shorts_state import ShortsState
+from schemas.shorts_schema import Scenario
 
 
-def generate_scenarios(state: State, api_key=settings.openai_api_key) -> State:
+def generate_scenarios(state: ShortsState, api_key=settings.openai_api_key) -> ShortsState:
     # OpenAI 클라이언트 초기화
     client = openai.OpenAI(api_key=api_key)
     
@@ -71,7 +71,7 @@ def generate_scenarios(state: State, api_key=settings.openai_api_key) -> State:
         print(f"API 호출 오류: {e}")
         return state
 
-def create_scenario_prompt(state: State) -> str:
+def create_scenario_prompt(state: ShortsState) -> str:
 
     repository = InMemoryAdStyleRepository()
     ad_style_list = repository.get_top3_ad_styles_by_business_type(state.business_type)
