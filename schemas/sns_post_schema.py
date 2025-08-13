@@ -1,9 +1,10 @@
+# schemas/sns_post_schema.py
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 
 # 요청 스키마
 class SNSPostRequest(BaseModel):
-    content_data: str = Field(..., description="콘텐츠 데이터 (파일 경로 또는 텍스트)")
+    content_data: str = Field(..., description="콘텐츠 데이터 (파일 경로)")
     content_type: Literal["image", "video"] = Field(default="image", description="콘텐츠 타입")
     user_keywords: List[str] = Field(default_factory=list, description="사용자 키워드")
     sns_platform: Literal["instagram", "facebook", "youtube"] = Field(..., description="SNS 플랫폼")

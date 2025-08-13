@@ -1,3 +1,4 @@
+# routers/sns_post_router.py
 from fastapi import APIRouter, HTTPException
 from schemas.sns_post_schema import (
     SNSPostRequest, 
@@ -35,7 +36,6 @@ async def generate_post(request: SNSPostRequest):
         return PostResponse(
             title=final_state.generated_post.title,
             content=final_state.generated_post.content,
-            call_to_action=final_state.generated_post.call_to_action
         )
         
     except Exception as e:
@@ -57,7 +57,7 @@ async def generate_hashtags_only(request: HashtagRequest):
             location=request.location
         )
         
-        # 임시 PostData 생성 (call_to_action은 선택사항)
+        # 임시 PostData 생성
         from states.sns_post_state import PostData
         temp_post = PostData(
             title=request.post_title,
