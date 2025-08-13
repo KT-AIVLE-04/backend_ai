@@ -1,12 +1,12 @@
 # nodes/scene_generator.py
 from openai import OpenAI
-from schemas.agent_schema import Scene
-from states.agent_state import State
+from schemas.shorts_schema import Scene
+from states.shorts_state import ShortsState
 from config.settings import settings
 import json, re, ast
 
 
-def generate_scenes(state: State) -> State:
+def generate_scenes(state: ShortsState) -> ShortsState:
     # OpenAI 클라이언트 초기화
     client = OpenAI(api_key=settings.openai_api_key)
     
@@ -82,7 +82,7 @@ def create_system_message():
 ]
 """
 
-def create_user_prompt(state: State):
+def create_user_prompt(state: ShortsState):
     scene_count = state.ad_duration // 5
     
     prompt = f"""다음 정보를 바탕으로 **정확히 {scene_count}개의 장면**을 생성하세요.

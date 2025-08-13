@@ -1,6 +1,6 @@
 # nodes/veo_prompt_generator.py
 from openai import OpenAI
-from states.agent_state import State
+from states.shorts_state import ShortsState
 from config.settings import settings
 
 
@@ -39,7 +39,7 @@ def build_veo_prompt(scene: str, summary: str) -> str:
     """
 
 # - 프롬프트 생성 함수
-def generate_all_veo_prompts(state: State) -> State:
+def generate_all_veo_prompts(state: ShortsState) -> ShortsState:
     # print('\n🏳️ 노드4 결과\n', state)
     veo_prompts = []
 

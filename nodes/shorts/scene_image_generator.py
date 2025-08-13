@@ -1,12 +1,11 @@
 import json
-import random
 from config.settings import settings
-from states.agent_state import State
+from states.shorts_state import ShortsState
 from openai import OpenAI
 import replicate
 from utils.image_utils import combine_images
 
-def generate_scene_images(state: State) -> State:
+def generate_scene_images(state: ShortsState) -> ShortsState:
     
     openai_client = OpenAI(api_key=settings.openai_api_key)
     replicate_client = replicate.Client(api_token=settings.replicate_api_key)

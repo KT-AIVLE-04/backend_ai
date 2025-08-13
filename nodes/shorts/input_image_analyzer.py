@@ -2,11 +2,11 @@
 import json
 from config.settings import settings
 from openai import OpenAI
-from states.agent_state import State
+from states.shorts_state import ShortsState
 
 client = OpenAI(api_key=settings.openai_api_key)
 
-def analyse_input_images(state: State) -> State:
+def analyse_input_images(state: ShortsState) -> ShortsState:
     
     if not state.image_list:
         return state

@@ -1,8 +1,8 @@
-from schemas.agent_schema import Scenario
+from schemas.shorts_schema import Scenario
 from langgraph.types import interrupt
-from states.agent_state import State
+from states.shorts_state import ShortsState
 
-def user_select_scenario(state: State) -> State:
+def user_select_scenario(state: ShortsState) -> ShortsState:
     result = interrupt({
         "scenarios": state.scenarios
     })

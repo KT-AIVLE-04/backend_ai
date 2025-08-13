@@ -1,15 +1,15 @@
 # services/agent_service.py
 import uuid
-from core.agent_graph import graph
+from core.shorts_graph import graph
 from langgraph.types import Command
-from states.agent_state import State
-from schemas.agent_schema import Scenario, ScenarioRequest, ScenarioResponse, InputImageInfo, VideoRequest, VideoResponse
+from states.shorts_state import ShortsState
+from schemas.shorts_schema import Scenario, ScenarioRequest, ScenarioResponse, InputImageInfo, VideoRequest, VideoResponse
 
 def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
      # 새로운 세션 ID 생성
     session_id = str(uuid.uuid4())
     
-    state = State(**payload.model_dump())
+    state = ShortsState(**payload.model_dump())
 
     result = graph.invoke(
         state,

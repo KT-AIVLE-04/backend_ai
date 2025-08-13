@@ -2,11 +2,11 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
-from states.agent_state import State
+from states.shorts_state import ShortsState
 from config.settings import settings
 
 
-def edit_scenario(state: State) -> State:
+def edit_scenario(state: ShortsState) -> ShortsState:
 
     if not state.edit_request:
         print("[edit_scenario] edit_request 없음 → 처리 생략")

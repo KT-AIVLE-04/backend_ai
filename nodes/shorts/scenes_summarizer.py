@@ -1,10 +1,10 @@
 from openai import OpenAI
-from states.agent_state import State
+from states.shorts_state import ShortsState
 from config.settings import settings
 
 client = OpenAI(api_key=settings.openai_api_key)
 
-def summarize_scenes(state: State) -> State:
+def summarize_scenes(state: ShortsState) -> ShortsState:
     """
     장면들을 분석하여 일관성 유지를 위한 요약 생성
     이미지 생성 시 스타일, 색감, 분위기의 일관성을 유지하기 위해 사용
@@ -62,7 +62,7 @@ def create_system_message():
 - 이미지 생성 시 일관성 있는 결과물을 위한 **핵심 키워드 중심** 작성
 - 3-4문장으로 간결하게 정리"""
 
-def create_user_prompt(state: State):
+def create_user_prompt(state: ShortsState):
     prompt = f"""다음 {len(state.scenes)}개 장면을 분석하여 일관성 유지를 위한 요약을 작성해주세요:
 
 📌 매장 정보:
