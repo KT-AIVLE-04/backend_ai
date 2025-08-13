@@ -40,7 +40,7 @@ def generate_scene_images(state: State) -> State:
                     input={
                         "prompt": scene_config["flux-kontext-prompt"],
                         "go_fast": False,
-                        "aspect_ratio": "9:16", 
+                        "aspect_ratio": "16:9", 
                         "output_format": "jpg",
                         "prompt_upsampling": False
                     }
@@ -55,7 +55,7 @@ def generate_scene_images(state: State) -> State:
                         "prompt": scene_config["flux-kontext-prompt"],
                         "input_image": reference_image_url,
                         "go_fast": False,
-                        "aspect_ratio": "9:16", 
+                        "aspect_ratio": "16:9", 
                         "output_format": "jpg",
                         "prompt_upsampling": False
                     }
