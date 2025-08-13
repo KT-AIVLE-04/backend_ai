@@ -42,32 +42,36 @@ async def generate_post(request: SNSPostRequest):
         raise HTTPException(status_code=500, detail=f"게시물 생성 중 오류가 발생했습니다: {str(e)}")
 
 @router.post("/generate-hashtags", response_model=HashtagResponse)
-async def generate_hashtags_only(request: HashtagRequest):
+async def generate_hashtags(request: HashtagRequest):
     """
     기존 게시물 정보를 바탕으로 해시태그만 생성합니다.
     """
     try:
-        # 임시 상태 생성 (해시태그 생성에 필요한 정보만)
+        # 트렌드 분석을 위한 임시 상태 생성
         temp_state = SNSPostState(
             content_data="",  # 해시태그 생성에는 불필요
-            content_type="image",
+            content_type="image",  # 기본값으로 설정
             sns_platform=request.sns_platform,
             business_type=request.business_type,
             user_keywords=request.user_keywords,
             location=request.location
         )
         
-        # 임시 PostData 생성
+        # 1. 트렌드 분석 실행
+        from nodes.sns_post.trend_analyzer import analyze_trend
+        temp_state = analyze_trend(temp_state)
+        
+        # 2. 임시 PostData 생성
         from states.sns_post_state import PostData
         temp_post = PostData(
             title=request.post_title,
             content=request.post_content,
         )
         
-        # generated_post 설정
+        # 3. generated_post 설정
         temp_state = temp_state.model_copy(update={"generated_post": temp_post})
         
-        # 해시태그 생성
+        # 4. 해시태그 생성
         final_state = generate_hashtags(temp_state)
         
         return HashtagResponse(
