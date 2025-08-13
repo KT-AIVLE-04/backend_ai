@@ -33,7 +33,6 @@ def sns_post_workflow() -> Any:
 
 def run_sns_post_generation(
     content_data: str,
-    content_type: str,
     user_keywords: List[str],
     sns_platform: str,
     business_type: str,
@@ -46,7 +45,6 @@ def run_sns_post_generation(
     # 초기 상태 생성
     initial_state = SNSPostState(
         content_data=content_data,
-        content_type=content_type,
         sns_platform=sns_platform,
         business_type=business_type,
         user_keywords=user_keywords,

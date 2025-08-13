@@ -25,7 +25,6 @@ class PostData(BaseModel):
 
 class SNSPostState(BaseModel):
     # 입력
-    content_type: Literal["image", "video"] = "image"
     content_data: str  # 파일 경로 또는 텍스트
     sns_platform: Literal["instagram", "facebook", "youtube"]
     business_type: str

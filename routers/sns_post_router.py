@@ -23,7 +23,6 @@ async def generate_post(request: SNSPostRequest):
         # 워크플로우 실행
         final_state = run_sns_post_generation(
             content_data=request.content_data,
-            content_type=request.content_type,
             sns_platform=request.sns_platform,
             business_type=request.business_type,
             user_keywords=request.user_keywords,
@@ -50,7 +49,6 @@ async def generate_hashtags(request: HashtagRequest):
         # 트렌드 분석을 위한 임시 상태 생성
         temp_state = SNSPostState(
             content_data="",  # 해시태그 생성에는 불필요
-            content_type="image",  # 기본값으로 설정
             sns_platform=request.sns_platform,
             business_type=request.business_type,
             user_keywords=request.user_keywords,
@@ -90,7 +88,6 @@ async def generate_full_post(request: SNSPostRequest):
         # 워크플로우 실행
         final_state = run_sns_post_generation(
             content_data=request.content_data,
-            content_type=request.content_type,
             sns_platform=request.sns_platform,
             business_type=request.business_type,
             user_keywords=request.user_keywords,
