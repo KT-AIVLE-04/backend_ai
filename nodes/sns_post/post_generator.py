@@ -29,7 +29,7 @@ def generate_post(state: SNSPostState) -> SNSPostState:
         - 플랫폼 특성 반영(톤, 길이, 이모지 사용 여부).
         - 업종 전문성 드러나되 광고성 문구 남발 금지.
         - "content"에는 자연스러운 1문장의 콜투액션을 포함하세요.
-        - **location 값이 비어있거나 None이면, 지역 관련 태그는 생성하지 말고 무시**
+        - **'매장 위치(location)' 값이 비어있거나 None이면, 지역 관련 태그는 생성하지 말고 무시**
         """),
         ("human", """다음 정보를 바탕으로 SNS 게시글을 생성하세요:
 
@@ -37,7 +37,7 @@ def generate_post(state: SNSPostState) -> SNSPostState:
         키워드: {user_keywords}
         플랫폼: {sns_platform}
         업종: {business_type}
-        위치: {location}
+        매장 위치: {location}
         트렌드 정보:{trend_analysis}
         
         위 정보를 종합하여 매력적인 SNS 게시글을 JSON 형식으로 생성하세요.""")

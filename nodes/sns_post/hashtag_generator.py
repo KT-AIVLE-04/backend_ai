@@ -68,9 +68,9 @@ def generate_hashtags(state: SNSPostState) -> SNSPostState:
         [품질/규칙]
         - 모든 태그는 '#'로 시작, 공백·이모지·URL 금지, 한국어 중심(필요 시 혼잡도 낮은 영문 보조)
         - 중복·의미중복(표기차/단복수) 제거
-        - 지역/시즌은 입력 맥락 있을 때만 포함(무리한 추가 금지)
         - 플랫폼 한도 초과 금지
-        - **location 값이 비어있거나 None이면, 지역 관련 태그는 생성하지 말고 무시**
+        - **'매장 위치(location)' 값이 비어있거나 None이면, 지역 관련 태그는 생성하지 말고 무시**
+        - **'사용자 키워드(user_keywords)' 값이 비어있거나 빈 리스트([])이면, 키워드 기반 태그는 생략하고 나머지 규칙에 맞게 생성**
         """),
         ("human", """다음 정보를 바탕으로 해시태그를 생성하세요:
         
@@ -79,7 +79,7 @@ def generate_hashtags(state: SNSPostState) -> SNSPostState:
         - 사용자 키워드: {user_keywords}
         - SNS 플랫폼: {sns_platform}
         - 업종: {business_type}
-        - 위치: {location}
+        - 매장 위치: {location}
         - 트렌드 분석 결과: {trend_analysis}
         """)
     ])
