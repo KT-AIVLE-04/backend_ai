@@ -48,7 +48,7 @@ def _extract_json(text: str):
     return None
 
 def analyze_content(state: SNSPostState) -> SNSPostState:
-    print("🖼️ [CONTENT_ANALYZER] 콘텐츠 분석 시작")
+    print("\n1️⃣ [CONTENT_ANALYZER] 콘텐츠 분석 시작")
 
     content_path = state.content_data if isinstance(state.content_data, str) else None
     user_keywords = state.user_keywords or []
@@ -71,7 +71,7 @@ def analyze_content(state: SNSPostState) -> SNSPostState:
             print(f"ℹ️ 비이미지(영상/기타) URL 감지: {ext} -> 메타 요약으로 대체")
             fb = _fallback_content(
                 state,
-                f"{os.path.basename(urlparse(content_path).path) or '원격 파일'} 기반 콘텐츠. 업종={state.business_type}, 플랫폼={state.sns_platform}"
+                f"{os.path.basename(urlparse(content_path).path) or '원격 파일'} 기반 콘텐츠. 업종={state.business_type}, 사용자 키워드={user_keywords_str}"
             )
             return state.model_copy(update={"content_summary": fb})
 
@@ -79,9 +79,7 @@ def analyze_content(state: SNSPostState) -> SNSPostState:
             "분석 요청 정보:\n"
             f"- 미디어 타입: image\n"
             f"- 사용자 키워드: {user_keywords_str}\n"
-            f"- SNS 플랫폼: {state.sns_platform}\n"
             f"- 업종: {state.business_type}\n"
-            "이미지 분석 후 위 JSON 스키마로만 반환."
         )
         human_msg = HumanMessage(content=[
             {"type": "text", "text": human_text},
@@ -94,12 +92,13 @@ def analyze_content(state: SNSPostState) -> SNSPostState:
             if not data:
                 raise ValueError("JSON 파싱 실패")
             content = ContentData(**data)
+            print("[결과]", content)
             return state.model_copy(update={"content_summary": content})
         except Exception as e:
             print(f"⚠️ [CONTENT_ANALYZER] 원격 이미지 분석 실패: {e}")
             fb = _fallback_content(
                 state,
-                f"원격 이미지 분석 실패. 업종={state.business_type}, 플랫폼={state.sns_platform}"
+                f"원격 이미지 분석 실패. 업종={state.business_type}, 사용자 키워드={user_keywords_str}"
             )
             return state.model_copy(update={"content_summary": fb})
 
@@ -108,7 +107,7 @@ def analyze_content(state: SNSPostState) -> SNSPostState:
         print(f"⚠️ 파일 없음 또는 경로 오류: {content_path} -> 텍스트 처리")
         fb = _fallback_content(
             state,
-            f"텍스트 기반 콘텐츠. 업종={state.business_type}, 플랫폼={state.sns_platform}"
+            f"텍스트 기반 콘텐츠. 업종={state.business_type}, 사용자 키워드={user_keywords_str}"
         )
         return state.model_copy(update={"content_summary": fb})
 
@@ -118,7 +117,7 @@ def analyze_content(state: SNSPostState) -> SNSPostState:
         print(f"ℹ️ 비이미지(영상/기타) 감지: {ext} -> 파일명/메타 기반 요약으로 대체")
         fb = _fallback_content(
             state,
-            f"{os.path.basename(content_path)} 파일 기반 콘텐츠. 업종={state.business_type}, 플랫폼={state.sns_platform}"
+            f"{os.path.basename(content_path)} 파일 기반 콘텐츠. 업종={state.business_type}, 사용자 키워드={user_keywords_str}"
         )
         return state.model_copy(update={"content_summary": fb})
 
@@ -130,7 +129,7 @@ def analyze_content(state: SNSPostState) -> SNSPostState:
         print(f"❌ 파일 읽기 오류: {e}")
         fb = _fallback_content(
             state,
-            f"파일 읽기 실패: {os.path.basename(content_path)}. 업종={state.business_type}, 플랫폼={state.sns_platform}"
+            f"파일 읽기 실패: {os.path.basename(content_path)}. 업종={state.business_type}, 사용자 키워드={user_keywords_str}"
         )
         return state.model_copy(update={"content_summary": fb})
 
@@ -140,9 +139,7 @@ def analyze_content(state: SNSPostState) -> SNSPostState:
         "분석 요청 정보:\n"
         f"- 미디어 타입: image\n"
         f"- 업종: {state.business_type}\n"
-        f"- SNS 플랫폼: {state.sns_platform}\n"
         f"- 사용자 키워드: {user_keywords_str}\n"
-        "이미지 분석 후 위 JSON 스키마로만 반환."
     )
     human_msg = HumanMessage(content=[
         {"type": "text", "text": human_text},
@@ -155,12 +152,12 @@ def analyze_content(state: SNSPostState) -> SNSPostState:
         if not data:
             raise ValueError("JSON 파싱 실패")
         content = ContentData(**data)
-        print("🤍", content)
+        print("[결과]", content)
         return state.model_copy(update={"content_summary": content})
     except Exception as e:
         print(f"❌ [CONTENT_ANALYZER] 오류: {e}")
         fb = _fallback_content(
             state,
-            f"이미지 분석 실패: {os.path.basename(content_path)}. 업종={state.business_type}, 플랫폼={state.sns_platform}"
+            f"이미지 분석 실패: {os.path.basename(content_path)}. 업종={state.business_type}, 사용자 키워드={user_keywords_str}"
         )
         return state.model_copy(update={"content_summary": fb})

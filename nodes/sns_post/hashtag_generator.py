@@ -38,7 +38,7 @@ def _cap_by_platform(tags: List[str], platform: str) -> List[str]:
     return tags[:hi]
 
 def generate_hashtags(state: SNSPostState) -> SNSPostState:
-    print("🏷️ [HASHTAG_GENERATOR] 해시태그 생성 시작")
+    print("\n4️⃣ [HASHTAG_GENERATOR] 해시태그 생성 시작")
     if not state.generated_post:
         print("⚠️ 생성된 게시글이 없습니다.")
         return state
@@ -99,14 +99,13 @@ def generate_hashtags(state: SNSPostState) -> SNSPostState:
     try:
         chain = llm | StrOutputParser()
         response = chain.invoke(messages)
-        print("🤍", response)
+        print("[결과]", response)
 
         # 쉼표로 구분된 해시태그를 파싱
         raw_tags = [tag.strip() for tag in response.split(',') if tag.strip()]
         tags = _normalize_hashtags(raw_tags)
         tags = _cap_by_platform(tags, state.sns_platform)
 
-        print("✅ [HASHTAG_GENERATOR] 해시태그 생성 완료")
         return state.model_copy(update={"hashtags": tags})
     except Exception as e:
         print(f"❌ [HASHTAG_GENERATOR] 오류: {e}")

@@ -53,7 +53,7 @@ def run_sns_post_generation(
     
     # 워크플로우 실행
     try:
-        print("🚀 [WORKFLOW] SNS 게시글 생성 워크플로우 시작")
+        print("[WORKFLOW] SNS 게시글 생성 워크플로우 시작")
         
         # 워크플로우 실행
         final_state_dict = app.invoke(initial_state)
@@ -61,7 +61,7 @@ def run_sns_post_generation(
         # AddableValuesDict를 SNSPostState로 변환
         final_state = SNSPostState(**final_state_dict)
         
-        print("✅ [WORKFLOW] 워크플로우 완료!")
+        print("[WORKFLOW] 워크플로우 완료!")
         if final_state.generated_post:
             print(f"   - 제목: {final_state.generated_post.title}")
             print(f"   - 본문: {final_state.generated_post.content}")
@@ -70,5 +70,5 @@ def run_sns_post_generation(
         return final_state
         
     except Exception as e:
-        print(f"❌ [WORKFLOW] 워크플로우 실행 오류: {e}")
+        print(f"[WORKFLOW] 워크플로우 실행 오류: {e}")
         return initial_state

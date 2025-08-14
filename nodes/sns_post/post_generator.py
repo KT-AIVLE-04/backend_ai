@@ -9,9 +9,9 @@ from utils.json_utils import to_json_str
 from langchain_core.output_parsers import StrOutputParser
 
 def generate_post(state: SNSPostState) -> SNSPostState:
-    print("✍️ [POST_GENERATOR] 게시글 생성 시작")
+    print("\n3️⃣ [POST_GENERATOR] 게시글 생성 시작")
     
-    llm = ChatOpenAI(temperature=0.7, model="gpt-4o-mini", streaming=False, api_key=settings.openai_api_key)
+    llm = ChatOpenAI(temperature=0.5, model="gpt-4o-mini", streaming=False, api_key=settings.openai_api_key)
 
     post_prompt = ChatPromptTemplate([
         ("system", """당신은 KPI 중심의 전문 SNS 마케터입니다.
@@ -59,11 +59,10 @@ def generate_post(state: SNSPostState) -> SNSPostState:
 
         try:
             post = PostData(**json.loads(response))
-            print("🤍", post)
+            print("[결과]", post)
         except Exception:
             print("⚠️ [POST_GENERATOR] JSON 파싱 실패, 원문 보존")
             
-        print("✅ [POST_GENERATOR] 게시글 생성 완료")
         return state.model_copy(update={"generated_post": post})
     except Exception as e:
         print(f"❌ [POST_GENERATOR] 오류: {e}")

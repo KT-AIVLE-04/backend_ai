@@ -12,9 +12,9 @@ from langchain_core.output_parsers import StrOutputParser
 
 def analyze_trend(state: SNSPostState) -> SNSPostState:
     """트렌드 분석"""
-    print("📊 [TREND_ANALYZER] 트렌드 분석 시작")
+    print("\n2️⃣ [TREND_ANALYZER] 트렌드 분석 시작")
     
-    llm = ChatOpenAI(temperature=0.7, model="gpt-4o-mini", streaming=False, api_key=settings.openai_api_key)
+    llm = ChatOpenAI(temperature=0.7, model="gpt-4o", streaming=False, api_key=settings.openai_api_key)
     
     trend_prompt = ChatPromptTemplate.from_messages([
         ("system", """당신은 SNS 트렌드 분석 전문가입니다.
@@ -43,7 +43,6 @@ def analyze_trend(state: SNSPostState) -> SNSPostState:
         - 현재 날짜: {current_date}
         """)
     ])
-    print('state.content_summary', state.content_summary)
     messages = trend_prompt.invoke(
         {
             "content_summary" : to_json_str(state.content_summary),
@@ -60,13 +59,11 @@ def analyze_trend(state: SNSPostState) -> SNSPostState:
         response = chain.invoke(messages)        
         try:
             trend = TrendData(**json.loads(response))
-            print("🤍", trend)
+            print("[결과]", trend)
 
         except Exception:
             print("⚠️ [TREND_ANALYZER] JSON 파싱 실패, 원문 보존")
-        
-        print("✅ [TREND_ANALYZER] 분석 완료")
-        
+                
         return state.model_copy(update={"trend_analysis": trend})
         
     except Exception as e:
