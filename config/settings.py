@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     perplexity_api_key: Optional[str] = None
     claude_api_key: Optional[str] = None
     replicate_api_key: Optional[str] = None
+    suno_api_key: Optional[str] = None
 
     class Config:
         env_file = ".env"
