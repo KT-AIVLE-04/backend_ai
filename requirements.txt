@@ -17,6 +17,12 @@ Pillow>=10.0.0
 anthropic>=0.48
 replicate
 
+moviepy==1.0.3
+opencv-python==4.12.0.88
+
+numpy==2.0.2
+scipy==1.16.1
+
 redis>=5.2.1
 redisvl>=0.5.1
 langgraph-checkpoint>=2.0.24
