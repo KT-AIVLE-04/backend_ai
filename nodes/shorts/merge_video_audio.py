@@ -17,7 +17,7 @@ def merge_video_with_audio(state: ShortsState) -> ShortsState:
     try:
         # 비디오 & 오디오 로드
         video = VideoFileClip(state.final_video_path)
-        audio = AudioFileClip(state.music_files[0])
+        audio = AudioFileClip(state.music_files[1])
 
         video_duration = video.duration
         audio_duration = audio.duration
