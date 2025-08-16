@@ -1,6 +1,6 @@
 # schemas/agent_schema.py
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 class Scenario(BaseModel):
     title: str
@@ -24,7 +24,7 @@ class ScenarioRequest(BaseModel):
 
 class ScenarioResponse(BaseModel):
     session_id: str
-    scenarios: List[Scenario] = Field(default_factory=list)
+    scenarios: List[Scenario] = Field(default_factory = list)
 
 class Scene(BaseModel):
     title: str
@@ -44,7 +44,14 @@ class VideoResponse(BaseModel):
     scenes: List[Scene]
     ai_scenes_image_list: List[str]
 
+    final_video_path: Optional[str] = Field(default = None, description = "최종 비디오 파일 경로")
+    final_video_filename: Optional[str] = Field(default = None, description = "최종 비디오 파일명")
+    
+    # 개별 씬 비디오 URL
+    scene_video_urls: List[str] = Field(default_factory = list, description = "각 씬별 생성된 비디오 URL")
+    
+
 class InputImageInfo(BaseModel):
     url: str
-    main_objects: List[str] = Field(default_factory=list)
+    main_objects: List[str] = Field(default_factory = list)
     description: str = ""
