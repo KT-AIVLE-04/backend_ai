@@ -13,7 +13,7 @@ def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
 
     result = graph.invoke(
         state,
-        config={"configurable": {"thread_id": session_id}}
+        config = {"configurable": {"thread_id": session_id}}
     )
 
     if "__interrupt__" in result:
@@ -22,28 +22,28 @@ def run_agent_flow(payload: ScenarioRequest) -> ScenarioResponse:
         scenarios = interrupt_data.get("scenarios", [])
         
         # ScenarioResponse로 반환
-        return ScenarioResponse(session_id=session_id, scenarios=scenarios)
+        return ScenarioResponse(session_id = session_id, scenarios = scenarios)
 
-    return ScenarioResponse(session_id=session_id, scenarios=[])
+    return ScenarioResponse(session_id = session_id, scenarios = [])
 
-def resume_agent_flow(
-    payload: VideoRequest
-) -> VideoResponse:
+
+
+def resume_agent_flow(payload: VideoRequest) -> VideoResponse:
     session_id = payload.session_id
-    scenario = Scenario(title=payload.title, content=payload.content)
+    scenario = Scenario(title = payload.title, content = payload.content)
     image_list = [
-        InputImageInfo(url=url) for url in payload.image_list
+        InputImageInfo(url = url) for url in payload.image_list
     ]
 
     resumed_result = graph.invoke(
-        Command(resume={"final_scenario": scenario, "ad_duration": payload.ad_duration, "image_list": image_list}),
-        config={"configurable": {"thread_id": session_id}}
+        Command(resume = {"final_scenario": scenario, "ad_duration": payload.ad_duration, "image_list": image_list}),
+        config = {"configurable": {"thread_id": session_id}}
     )
     
     print(resumed_result)
     print(type(resumed_result))
     
+    
     return VideoResponse(
-        scenes=resumed_result["scenes"], 
-        ai_scenes_image_list=resumed_result["scenes_image_list"]
+        key = resumed_result["key"]
     )

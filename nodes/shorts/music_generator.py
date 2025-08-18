@@ -86,21 +86,27 @@ def get_audio_url(task_id: str, suno_api_key: str) -> Tuple[Optional[str], Optio
     url = f"https://api.sunoapi.org/api/v1/generate/record-info?taskId={task_id}"
     headers = {"Authorization": f"Bearer {suno_api_key}"}
 
-    while True:
+    # 시도 횟수
+    max_retries = 100
+    retries = 0
+
+    while retries < max_retries:
         try:
-            response = requests.get(url, headers = headers)
+            response = requests.get(url, headers=headers)
             data = response.json()
 
-            status = data.get('data').get('status')
+            status = data.get('data', {}).get('status')
+            print(f"[{retries+1}/{max_retries}] Status: {status}")
 
-            if status == 'PENDING':
-                time.sleep(3)
+            if status in ('PENDING', 'TEXT_SUCCESS', 'FIRST_SUCCESS'):
+                time.sleep(10)
+                retries += 1
                 continue
             
             elif status == 'SUCCESS':
-                audio_url_1 = data.get('data').get('response').get('sunoData')[0].get('audioUrl')
-                audio_url_2 = data.get('data').get('response').get('sunoData')[1].get('audioUrl')
-
+                suno_data = data.get('data', {}).get('response', {}).get('sunoData', [])
+                audio_url_1 = suno_data[0].get('audioUrl') if len(suno_data) > 0 else None
+                audio_url_2 = suno_data[1].get('audioUrl') if len(suno_data) > 1 else None
                 return audio_url_1, audio_url_2
 
             else:
@@ -108,6 +114,10 @@ def get_audio_url(task_id: str, suno_api_key: str) -> Tuple[Optional[str], Optio
     
         except Exception as e:
             raise Exception(f"오디오 추출 실패 {e}")
+
+    raise TimeoutError("Suno 오디오 생성 시간 초과")
+
+
 
 
 
