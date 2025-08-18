@@ -34,6 +34,7 @@ def seedance_prompt_generation(state: ShortsState) -> ShortsState:
     
     state.seedance_results = []
     previous_prompt = ""
+    is_ending = False
 
     try:
         for i in range(len(scene_descriptions)):
@@ -45,6 +46,8 @@ def seedance_prompt_generation(state: ShortsState) -> ShortsState:
 
             # 다음 씬 정보
             if i < len(scene_descriptions) - 1:
+                is_ending = False
+
                 tail_frame = state.scenes_image_list[i + 1]
                 next_scene = scene_descriptions[i + 1]
             
@@ -53,6 +56,8 @@ def seedance_prompt_generation(state: ShortsState) -> ShortsState:
 
             else:
                 # 마지막 씬 (None)
+                is_ending = True
+
                 tail_frame = None
                 next_scene = None
                 
@@ -69,7 +74,9 @@ def seedance_prompt_generation(state: ShortsState) -> ShortsState:
                 scene_index = i,
                 total_scenes = len(scene_descriptions),
                 business_info = business_info,
-                previous_prompt = previous_prompt
+                previous_prompt = previous_prompt,
+                is_ending = is_ending,
+                all_scenes = scene_descriptions
             )
 
             prompt = result["prompt"]
@@ -140,20 +147,14 @@ def generate_seedance_prompt(client: anthropic.Anthropic,
                              is_ending: bool = False,
                              all_scenes: Optional[List[str]] = None) -> Dict[str, Any]:
         
-    """Seedance 텍스트 프롬프트 생성"""
-
-    start_image_data = load_image(start_image_path)
-    
+    """Seedance 텍스트 프롬프트 생성"""    
     if not is_ending and tail_image_path:
-        tail_image_data = load_image(tail_image_path)
-
-        character_analysis = analyze_character_difference(client, start_image_path, tail_image_path, start_image_data, tail_image_data)
+        character_analysis = analyze_character_difference(client, start_image_path, tail_image_path)
 
         transition_strategy = determine_transition_strategy(character_analysis)
 
 
     else:
-        tail_image_data = None
         character_analysis = {"description": "Final scene - No transition needed"}
         transition_strategy = {
           "system_rules": """
@@ -168,7 +169,7 @@ def generate_seedance_prompt(client: anthropic.Anthropic,
         }
 
     # 비즈니스 정보 분석 (스타일 가이드 생성)
-    style_guide = analyze_business_context(business_info) if business_info else ""
+    style_guide = analyze_business_context(client, business_info) if business_info else ""
 
      # 이전 프롬프트 분석
     continuity_hint = analyze_previous_prompt(previous_prompt) if previous_prompt else ""
@@ -179,7 +180,7 @@ def generate_seedance_prompt(client: anthropic.Anthropic,
         if all_scenes:
             narrative_summary = f"""
             NARRATIVE CONTEXT (for ENDING):
-            Full story arc: {' → '.join([s[:30] + '...' for s in all_scenes])}
+            Full story arc: {' → '.join([s[:50] + '...' for s in all_scenes])}
         
             Create an ending that:
             - Resolves the narrative
@@ -266,11 +267,11 @@ def generate_seedance_prompt(client: anthropic.Anthropic,
         
         if next_scene_description:
             next_scene_info = f"""
-        IMPORTANT: The TAIL FRAME is the beginning of the NEXT scene:
-        Next Scene Description: "{next_scene_description}"
+            IMPORTANT: The TAIL FRAME is the beginning of the NEXT scene:
+            Next Scene Description: "{next_scene_description}"
 
-        Your ending should naturally lead into this next scene by:
-        """
+            Your ending should naturally lead into this next scene by:
+            """
 
         user_prompt = f"""
         Create a Seedance prompt for:
@@ -335,9 +336,8 @@ def generate_seedance_prompt(client: anthropic.Anthropic,
                     {
                         "type": "image",
                         "source": {
-                            "type": "base64",
-                            "media_type": detect_image_type(start_image_path),
-                            "data": start_image_data
+                            "type": "url",
+                            "url": start_image_path
                         }
                     },
                     {
@@ -362,9 +362,8 @@ def generate_seedance_prompt(client: anthropic.Anthropic,
                     {
                             "type": "image",
                             "source": {
-                                "type": "base64",
-                                "media_type": detect_image_type(start_image_path),
-                                "data": start_image_data
+                                "type": "url",
+                                "url": start_image_path
                             }
                         },
                         {
@@ -374,9 +373,8 @@ def generate_seedance_prompt(client: anthropic.Anthropic,
                         {
                             "type": "image",
                             "source": {
-                                "type": "base64",
-                                "media_type": detect_image_type(tail_image_path),
-                                "data": tail_image_data
+                                "type": "url",
+                                "url": tail_image_path
                             }
                         },
                         {
@@ -520,9 +518,7 @@ def analyze_business_context(client: anthropic.Anthropic,
 
 def analyze_character_difference(client: anthropic.Anthropic,
                                  start_path: str,
-                                 tail_path: str,
-                                 start_data: str,
-                                 tail_data: str) -> Dict[str, Any]:
+                                 tail_path: str) -> Dict[str, Any]:
 
     """이미지 내 등장인물 분석"""
           
@@ -561,9 +557,8 @@ def analyze_character_difference(client: anthropic.Anthropic,
                         {
                             "type": "image",
                             "source": {
-                                "type": "base64",
-                                "media_type": detect_image_type(start_path),
-                                "data": start_data
+                                "type": "url",
+                                "url": start_path,
                             }
                         },
                         {
@@ -573,9 +568,8 @@ def analyze_character_difference(client: anthropic.Anthropic,
                         {
                             "type": "image",
                             "source": {
-                                "type": "base64",
-                                "media_type": detect_image_type(tail_path),
-                                "data": tail_data
+                                "type": "url",
+                                "url": tail_path
                             }
                         },
                         {
@@ -931,28 +925,6 @@ def optimize_prompt_for_seedance(client: anthropic.Anthropic, prompt: str) -> st
     except Exception as e:
         print(f"최적화 실패: {str(e)}")
         return prompt
-
-
-
-def load_image(image_path: str) -> str:
-    """이미지 Base64 변환"""
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode('utf-8')
-
-
-
-def detect_image_type(image_path: str) -> str:
-    """이미지 타입 감지"""
-    ext = os.path.splitext(image_path)[1].lower()
-
-    type_map = {
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.png': 'image/png',
-        '.webp': 'image/webp',
-    }
-
-    return type_map.get(ext, 'image/jpeg')
 
 
 
