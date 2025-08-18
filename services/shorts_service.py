@@ -45,11 +45,5 @@ def resume_agent_flow(payload: VideoRequest) -> VideoResponse:
     
     
     return VideoResponse(
-        scenes = resumed_result["scenes"], 
-        ai_scenes_image_list = resumed_result["scenes_image_list"],
-
-        final_video_path = resumed_result["final_video_audio_path"],
-        final_video_filename = resumed_result["final_video_audio_filename"],
-
-        scene_video_urls = resumed_result.get("video_urls", []),
+        key = resumed_result["key"]
     )
