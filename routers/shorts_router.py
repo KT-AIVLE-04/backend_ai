@@ -25,11 +25,9 @@ async def resume_agent_after_select_scenario(payload: VideoRequest):
     """
     response = resume_agent_flow(payload)
 
-    if response.final_video_path:
+    if response.key:
         video_sessions[payload.session_id] = {
-            "final_video_path": response.final_video_path,
-            "final_video_filename": response.final_video_filename,
-            "scene_video_urls": response.scene_video_urls
+            "key": response.key
         }
     
     return response
