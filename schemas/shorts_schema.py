@@ -1,10 +1,12 @@
 # schemas/agent_schema.py
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
+
 
 class Scenario(BaseModel):
     title: str
     content: str
+
 
 class ScenarioRequest(BaseModel):
     # 매장 정보
@@ -22,13 +24,16 @@ class ScenarioRequest(BaseModel):
     # 사용자의 시나리오 요구사항
     scenario_prompt: str
 
+
 class ScenarioResponse(BaseModel):
     session_id: str
-    scenarios: List[Scenario] = Field(default_factory=list)
+    scenarios: List[Scenario] = Field(default_factory = list)
+
 
 class Scene(BaseModel):
     title: str
     content: str
+
 
 class VideoRequest(BaseModel):
     session_id: str
@@ -37,14 +42,12 @@ class VideoRequest(BaseModel):
     ad_duration: int
     image_list: List[str]
 
-class VideoResponse(BaseModel):
-    # video_url: str
 
-    # TODO: 테스트
-    scenes: List[Scene]
-    ai_scenes_image_list: List[str]
+class VideoResponse(BaseModel):
+    key: Optional[str] = Field(default = None, description = "S3에 저장된 최종 비디오 key")
+
 
 class InputImageInfo(BaseModel):
     url: str
-    main_objects: List[str] = Field(default_factory=list)
+    main_objects: List[str] = Field(default_factory = list)
     description: str = ""

@@ -43,16 +43,13 @@ builder.add_edge("user_select_scenario", "analyse_input_images")
 builder.add_edge("analyse_input_images", "generate_scenes")
 builder.add_edge("generate_scenes", "summarize_scenes")
 builder.add_edge("summarize_scenes", "generate_scene_images")
-builder.add_edge("generate_scene_images", END)
-
-# 노드 연결 테스트 필요
-# builder.add_edge("generate_scene_images", "seedance_prompt_generation")
-# builder.add_edge("seedance_prompt_generation", "generate_video_series")
-# builder.add_edge("generate_video_series", "analyze_final_video")
-# builder.add_edge("analyze_final_video", "generate_suno_music_prompt")
-# builder.add_edge("generate_suno_music_prompt", "generate_music")
-# builder.add_edge("generate_music", "merge_video_with_audio")
-# builder.add_edge("merge_video_with_audio", END)
+builder.add_edge("generate_scene_images", "seedance_prompt_generation")
+builder.add_edge("seedance_prompt_generation", "generate_video_series")
+builder.add_edge("generate_video_series", "analyze_final_video")
+builder.add_edge("analyze_final_video", "generate_suno_music_prompt")
+builder.add_edge("generate_suno_music_prompt", "generate_music")
+builder.add_edge("generate_music", "merge_video_with_audio")
+builder.add_edge("merge_video_with_audio", END)
 
 
 redis_client = redis.Redis.from_url("redis://localhost:6379")
