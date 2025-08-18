@@ -363,14 +363,14 @@ def process_analysis_results(analysis_data: dict,
     scene_transitions = detect_scene_changes(motion_data, analysis_data['brightness'], video_info['fps'])
 
     
-    return {
+    result = {
         'duration': video_info['duration'],
         'fps': video_info['fps'],
         'avg_brightness': avg_brightness,
         'brightness_variance': brightness_variance,
         'avg_color_temp': avg_color_temp,
         'motion_intensity': avg_motion,
-        'visual_energy': np.clip(visual_energy, 0, 100),
+        'visual_energy': float(np.clip(visual_energy, 0, 100)),
         'scene_transitions': scene_transitions,
         'dominant_colors': dominant_moods,
         'rhythm_pattern': rhythm_pattern,
@@ -379,6 +379,8 @@ def process_analysis_results(analysis_data: dict,
         'motion_peaks': motion_peaks,
         'energy_curve': energy_curve
     }
+
+    return to_json_safe(result)
 
 
 
@@ -474,3 +476,19 @@ def extract_mood(brightness: float,
 
     
     return moods if moods else ['neutral']
+
+
+def to_json_safe(obj):
+    if isinstance(obj, dict):
+        return {to_json_safe(k): to_json_safe(v) for k, v in obj.items()}
+    
+    if isinstance(obj, (list, tuple)):
+        return [to_json_safe(x) for x in obj]
+    
+    if isinstance(obj, (np.generic,)):  # np.integer/np.floating/np.bool_ 포함
+        return obj.item()
+    
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    
+    return obj
