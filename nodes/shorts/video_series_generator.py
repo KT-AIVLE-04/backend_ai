@@ -4,7 +4,6 @@ import os
 import re
 import json
 import requests
-import base64
 import random
 import time
 from datetime import datetime
@@ -91,8 +90,8 @@ def generate_video_segment(client_video,
                 "bytedance/seedance-1-lite",
                 input = {
                     "prompt": prompt.strip(),
-                    "image": image_to_data_url(start_image_path),
-                    "last_frame_image": image_to_data_url(last_image_path),
+                    "image": start_image_path,
+                    "last_frame_image": last_image_path,
                     "duration": 5,
                     "resolution": "1080p",
                     "aspect_ratio": "9:16",
@@ -113,7 +112,7 @@ def generate_video_segment(client_video,
                 "bytedance/seedance-1-lite",
                 input = {
                     "prompt": prompt.strip(),
-                    "image": image_to_data_url(start_image_path),
+                    "image": start_image_path,
                     "duration": 5,
                     "resolution": "1080p",
                     "aspect_ratio": "9:16",
@@ -126,20 +125,6 @@ def generate_video_segment(client_video,
 
         except Exception as e:
             raise Exception(f"영상 생성 오류: {e}")
-
-
-
-def image_to_data_url(image_path: str) -> str:
-    """Base64 인코딩"""
-    with open(image_path, 'rb') as image_file:
-        image_data = image_file.read()
-        base64_encoded = base64.b64encode(image_data).decode('utf-8')
-
-        if image_path.lower().endswith('.png'):
-            return f"data:image/png;base64,{base64_encoded}"
-
-        else:
-            return f"data:image/jpeg;base64,{base64_encoded}"
 
 
 
@@ -165,25 +150,25 @@ def safe_get_url(output):
 
 
 
-def download_video(url: str, filename: str) -> bool:
-    """비디오 다운로드"""
-    try:
-        response = requests.get(url, stream = True)
-        response.raise_for_status()
-
-        with open(filename, 'wb') as f:
-            for chunk in response.iter_content(chunk_size = 8192):
-                if chunk:
-                    f.write(chunk)
-
-        print(f"영상 다운로드 완료: {filename}")
-        
-        return True
-
-    except Exception as e:
-        print(f"다운로드 오류: {e}")
-        
-        return False
+def download_video(url: str, filename: str, retries: int = 5, delay: int = 5) -> bool:
+    """비디오 다운로드 (재시도 포함)"""
+    for attempt in range(1, retries + 1):
+        try:
+            response = requests.get(url, stream=True, timeout=30)
+            response.raise_for_status()
+            
+            with open(filename, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+            print(f"영상 다운로드 완료: {filename}")
+            return True
+        except Exception as e:
+            print(f"[시도 {attempt}/{retries}] 다운로드 오류: {e}")
+            if attempt < retries:
+                time.sleep(delay)
+            else:
+                return False
 
 
 
