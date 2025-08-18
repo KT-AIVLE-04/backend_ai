@@ -58,3 +58,5 @@ class ShortsState(BaseModel):
     final_video_audio_dir: str = Field(default = "./final", description = "최종 비디오(오디오 포함) 저장 폴더")
     final_video_audio_filename: str = Field(default = "final_video.mp4", description = "최종 비디오(오디오 포함) 파일명")
     final_video_audio_path: Optional[str] = Field(default = None, description = "최종 비디오(오디오 포함) 저장 경로")
+
+    key: Optional[str] = Field(default = None, description = "S3에 저장된 최종 비디오 key")
