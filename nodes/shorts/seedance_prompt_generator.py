@@ -178,14 +178,17 @@ def generate_seedance_prompt(client: anthropic.Anthropic,
         narrative_summary = ""
       
         if all_scenes:
+            previous_scenes = all_scenes[:-1]
+
             narrative_summary = f"""
             NARRATIVE CONTEXT (for ENDING):
-            Full story arc: {' → '.join([s[:50] + '...' for s in all_scenes])}
+            Previous story progression: {' → '.join([s[:50] + '...' for s in previous_scenes])}
         
-            Create an ending that:
-            - Resolves the narrative
-            - Reinforces the brand message
-            - Leaves a lasting impression
+            This ending scene should:
+            - Resolve the narrative arc established in the {len(previous_scenes)} previous scenes
+            - Create a powerful conclusion that follows from what came before
+            - Reinforce the brand message
+            - Leave a lasting impression
             """
 
     # 엔딩 씬 시스템 프롬프트
