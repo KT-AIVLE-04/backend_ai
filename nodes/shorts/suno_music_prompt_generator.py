@@ -310,7 +310,7 @@ def generate_prompt(client: anthropic.Anthropic,
     """
 
     # Suno 스타일 추출
-    suno_style = template['suno_styles'][0].value if template.get('suno_styles') else 'electronic'
+    suno_style = template['suno_styles'][0] if template.get('suno_styles') else 'electronic'
 
     
     user_prompt = f"""
