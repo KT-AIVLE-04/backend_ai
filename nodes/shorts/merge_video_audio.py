@@ -1,10 +1,16 @@
+from config.settings import settings
 from states.shorts_state import ShortsState
 import os
+from datetime import datetime
+import uuid
+from urllib.parse import quote
 from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_audioclips
+import boto3
+from botocore.exceptions import ClientError, NoCredentialsError
 
 def merge_video_with_audio(state: ShortsState) -> ShortsState:
     """영상 + 오디오 + 마지막 Fadeout (2.5초) """
-    if not state.video_file or not state.music_files:
+    if not state.final_video_path or not state.music_files:
         print("영상 또는 오디오 파일 없음")
         
         return state
@@ -81,12 +87,64 @@ def merge_video_with_audio(state: ShortsState) -> ShortsState:
         print("영상 + 오디오 머지 완료\n")
         print(f"최종 영상 생성 완료: {output_path}")
         
+        s3_key = upload_video_s3(output_path)
 
         state.final_video_audio_path = output_path
         state.final_video_audio_filename = os.path.basename(output_path)
+
+        state.key = s3_key
         
 
         return state
 
     except Exception as e:
         raise Exception(f"최종 영상(오디오 포함) 생성 실패: {e}")
+
+
+def upload_video_s3(video_path: str) -> str:
+    """ 영상 파일을 S3에 업로드하고 key를 반환 """
+    
+    try:
+        # S3 boto 설정 (최종 비디오 파일 저장)
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id = settings.aws_access_key_id,
+            aws_secret_access_key = settings.aws_secret_access_key,
+            region_name = settings.aws_default_region
+        )
+        
+        bucket_name = 'aivle-temp'
+
+        original_filename = os.path.basename(video_path)
+        
+        # key 생성 (uuid-비디오 파일명)
+        key = f"{uuid.uuid4()}-{quote(original_filename)}"
+        
+        print(f"S3 업로드: s3://{bucket_name}/{key}")
+        
+
+        s3_client.upload_file(
+            Filename = video_path,
+            Bucket = bucket_name,
+            Key = key
+        )
+
+        print(f"S3 업로드 완료: {key}")
+        
+        return key
+    
+    
+    # Exceptions
+    except NoCredentialsError:
+        error_msg = "AWS credentials가 설정되지 않음"
+        print(f"S3 업로드 실패: {error_msg}")
+        raise Exception(error_msg)
+    
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        print(f"S3 업로드 실패 (ClientError): {error_code} - {e}")
+        raise Exception(f"S3 업로드 실패: {e}")
+    
+    except Exception as e:
+        print(f"S3 업로드 실패: {e}")
+        raise Exception(f"S3 업로드 실패: {e}")
