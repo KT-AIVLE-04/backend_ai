@@ -3,4 +3,13 @@ dockerfile
 chaos/
 test_mj.py
 image.png
+__pycache__/
+
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.mp3
+
+*.pem
 맨투맨_test.jpg
