@@ -1,10 +1,10 @@
 # core/sns_post_graph.py
 from langgraph.graph import StateGraph, START, END
 from states.sns_post_state import SNSPostState
-from nodes.sns_post.content_analyzer import analyze_content
-from nodes.sns_post.trend_analyzer import analyze_trend
-from nodes.sns_post.post_generator import generate_post
-from nodes.sns_post.hashtag_generator import generate_hashtags
+from nodes.sns_post.content_analyzer import content_analyzer
+from nodes.sns_post.trend_analyzer import trend_analyzer
+from nodes.sns_post.post_generator import post_generator
+from nodes.sns_post.hashtag_generator import hashtag_generator
 from typing import List, Optional, Any
 
 def sns_post_workflow() -> Any:
@@ -13,17 +13,17 @@ def sns_post_workflow() -> Any:
     workflow = StateGraph(SNSPostState)
     
     # 노드 추가
-    workflow.add_node("analyze_content", analyze_content)
-    workflow.add_node("analyze_trend", analyze_trend)
-    workflow.add_node("generate_post", generate_post)
-    workflow.add_node("generate_hashtags", generate_hashtags)
+    workflow.add_node("content_analyzer", content_analyzer)
+    workflow.add_node("trend_analyzer", trend_analyzer)
+    workflow.add_node("post_generator", post_generator)
+    workflow.add_node("hashtag_generator", hashtag_generator)
     
     # 엣지 연결 (순차 실행)
-    workflow.add_edge(START, "analyze_content")
-    workflow.add_edge("analyze_content", "analyze_trend")
-    workflow.add_edge("analyze_trend", "generate_post")
-    workflow.add_edge("generate_post", "generate_hashtags")
-    workflow.add_edge("generate_hashtags", END)
+    workflow.add_edge(START, "content_analyzer")
+    workflow.add_edge("content_analyzer", "trend_analyzer")
+    workflow.add_edge("trend_analyzer", "post_generator")
+    workflow.add_edge("post_generator", "hashtag_generator")
+    workflow.add_edge("hashtag_generator", END)
     
     # 워크플로우 컴파일
     app = workflow.compile()

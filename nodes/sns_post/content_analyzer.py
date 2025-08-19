@@ -47,7 +47,7 @@ def _extract_json(text: str):
             return None
     return None
 
-def analyze_content(state: SNSPostState) -> SNSPostState:
+def content_analyzer(state: SNSPostState) -> SNSPostState:
     print("\n1️⃣ [CONTENT_ANALYZER] 콘텐츠 분석 시작")
 
     content_path = state.content_data if isinstance(state.content_data, str) else None

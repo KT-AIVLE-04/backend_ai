@@ -37,7 +37,7 @@ def _cap_by_platform(tags: List[str], platform: str) -> List[str]:
     lo, hi = limits.get(platform, (3, 5))
     return tags[:hi]
 
-def generate_hashtags(state: SNSPostState) -> SNSPostState:
+def hashtag_generator(state: SNSPostState) -> SNSPostState:
     print("\n4️⃣ [HASHTAG_GENERATOR] 해시태그 생성 시작")
     if not state.generated_post:
         print("⚠️ 생성된 게시글이 없습니다.")

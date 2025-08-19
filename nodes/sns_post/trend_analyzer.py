@@ -10,7 +10,7 @@ import json
 from utils.json_utils import to_json_str
 from langchain_core.output_parsers import StrOutputParser
 
-def analyze_trend(state: SNSPostState) -> SNSPostState:
+def trend_analyzer(state: SNSPostState) -> SNSPostState:
     """트렌드 분석"""
     print("\n2️⃣ [TREND_ANALYZER] 트렌드 분석 시작")
     

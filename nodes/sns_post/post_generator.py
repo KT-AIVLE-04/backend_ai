@@ -8,7 +8,7 @@ import json
 from utils.json_utils import to_json_str
 from langchain_core.output_parsers import StrOutputParser
 
-def generate_post(state: SNSPostState) -> SNSPostState:
+def post_generator(state: SNSPostState) -> SNSPostState:
     print("\n3️⃣ [POST_GENERATOR] 게시글 생성 시작")
     
     llm = ChatOpenAI(temperature=0.5, model="gpt-4o-mini", streaming=False, api_key=settings.openai_api_key)

@@ -8,7 +8,9 @@ from schemas.sns_post_schema import (
 )
 from core.sns_post_graph import run_sns_post_generation
 from states.sns_post_state import SNSPostState
-from nodes.sns_post.hashtag_generator import generate_hashtags
+from nodes.sns_post.hashtag_generator import hashtag_generator
+from nodes.sns_post.trend_analyzer import trend_analyzer
+
 
 router = APIRouter(prefix="/sns-post/agent", tags=["SNS Post Agent"])
 
@@ -57,8 +59,7 @@ async def generate_hashtags(request: HashtagRequest):
         )
         
         # 1. 트렌드 분석 실행
-        from nodes.sns_post.trend_analyzer import analyze_trend
-        temp_state = analyze_trend(temp_state)
+        temp_state = trend_analyzer(temp_state)
         
         # 2. 임시 PostData 생성
         from states.sns_post_state import PostData
@@ -71,7 +72,7 @@ async def generate_hashtags(request: HashtagRequest):
         temp_state = temp_state.model_copy(update={"generated_post": temp_post})
         
         # 4. 해시태그 생성
-        final_state = generate_hashtags(temp_state)
+        final_state = hashtag_generator(temp_state)
         
         return HashtagResponse(
             hashtags=final_state.hashtags
