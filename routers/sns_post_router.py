@@ -43,7 +43,7 @@ def generate_post(request: SNSPostRequest):
 
 
 
-@router.post("/hashtags", response_model=HashtagResponse)
+@router.post("/tags", response_model=HashtagResponse)
 def generate_hashtags(request: HashtagRequest):
     """
     기존 게시물 정보를 바탕으로 해시태그만 생성합니다.

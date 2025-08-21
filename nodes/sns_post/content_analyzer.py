@@ -66,12 +66,22 @@ def content_analyzer(state: SNSPostState) -> SNSPostState:
 
     # 1) HTTP(S) 이미지 URL
     if content_path and _is_http_url(content_path):
-        ext = os.path.splitext(urlparse(content_path).path)[1].lower()
-        if ext and ext not in IMAGE_EXTS:
-            print(f"ℹ️ 비이미지(영상/기타) URL 감지: {ext} -> 메타 요약으로 대체")
+        print(f"🌐 HTTP URL 감지: {content_path}")
+        
+        parsed = urlparse(content_path)
+        ext = os.path.splitext(parsed.path)[1].lower()
+        domain = parsed.netloc.lower()
+        
+        print(f"📝 URL 분석 - 도메인: {domain}, 경로: {parsed.path}, 확장자: '{ext}'")
+        
+        # AIVLE CDN 또는 S3 Presigned URL은 무조건 이미지/영상으로 처리
+        if 'aivle.r-e.kr' in domain or 's3.amazonaws.com' in domain or 'cdn.aivle' in domain:
+            print("✅ AIVLE/S3 CDN 감지 - 미디어 파일로 처리")
+        elif ext and ext not in IMAGE_EXTS:
+            print(f"❌ 비이미지 확장자 감지: {ext} -> 메타 요약으로 대체")
             fb = _fallback_content(
                 state,
-                f"{os.path.basename(urlparse(content_path).path) or '원격 파일'} 기반 콘텐츠. 업종={state.business_type}, 사용자 키워드={user_keywords_str}"
+                f"{os.path.basename(parsed.path) or '원격 파일'} 기반 콘텐츠. 업종={state.business_type}, 사용자 키워드={user_keywords_str}"
             )
             return state.model_copy(update={"content_summary": fb})
 
