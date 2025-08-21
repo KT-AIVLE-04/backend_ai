@@ -15,7 +15,7 @@ from nodes.sns_post.trend_analyzer import trend_analyzer
 router = APIRouter(prefix="/sns-post/agent", tags=["SNS Post Agent"])
 
 @router.post("/post", response_model=SNSPostResponse)
-async def generate_post(request: SNSPostRequest):
+def generate_post(request: SNSPostRequest):
     """
     게시물과 해시태그를 모두 생성합니다.
     """
@@ -44,7 +44,7 @@ async def generate_post(request: SNSPostRequest):
 
 
 @router.post("/hashtags", response_model=HashtagResponse)
-async def generate_hashtags(request: HashtagRequest):
+def generate_hashtags(request: HashtagRequest):
     """
     기존 게시물 정보를 바탕으로 해시태그만 생성합니다.
     """
