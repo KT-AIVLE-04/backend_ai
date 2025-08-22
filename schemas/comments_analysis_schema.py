@@ -28,8 +28,8 @@ class IndividualResult(BaseModel):
 
 class KeywordResult(BaseModel):
     """키워드 추출 결과"""
-    positive: List[str] = Field(default_factory=list, description = "긍정 키워드 리스트")
-    negative: List[str] = Field(default_factory=list, description = "부정 키워드 리스트")
+    positive: List[str] = Field(default_factory = list, description = "긍정 키워드 리스트")
+    negative: List[str] = Field(default_factory = list, description = "부정 키워드 리스트")
 
 
 class EmotionAnalysisResponse(BaseModel):
