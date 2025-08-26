@@ -1,8 +1,9 @@
 from config.settings import settings
 import anthropic
 import json
+from schemas.report_analysis_schema import PostAnalysisRequest
 
-def generate_korean_markdown_report(report_data: dict, analysis_data) -> str:
+def generate_korean_markdown_report(report_data: dict, analysis_data: PostAnalysisRequest) -> str:
     """한국어 markdown 보고서 변환"""
 
     client = anthropic.Anthropic(api_key = settings.claude_api_key)
@@ -170,33 +171,33 @@ def generate_fallback_markdown_report(report_data: dict, analysis_data) -> str:
     
     markdown = f"""# 📊 SNS 게시글 성과 분석 보고서
 
-    ## 📋 개요
+## 📋 개요
 
-    ### 게시글 정보
-    - **제목**: {analysis_data.title}
-    - **URL**: {analysis_data.url}
-    - **플랫폼**: YouTube
-    - **업종**: {analysis_data.industry}
-    - **게시일**: {analysis_data.publish_at}
+### 게시글 정보
+- **제목**: {analysis_data.title}
+- **URL**: {analysis_data.url}
+- **플랫폼**: YouTube
+- **업종**: {analysis_data.industry}
+- **게시일**: {analysis_data.publish_at}
 
-    ### 종합 성과
-    > **성과 점수**: {performance_score:.1f}/100점 {grade_emoji.get(performance_grade, "")}
-    > **성과 등급**: {performance_grade}등급
+### 종합 성과
+> **성과 점수**: {performance_score:.1f}/100점 {grade_emoji.get(performance_grade, "")}
+> **성과 등급**: {performance_grade}등급
 
-    ---
+---
 
-    ## 🎯 콘텐츠 효과성
+## 🎯 콘텐츠 효과성
 
-    ### 주요 지표
-    | 지표 | 점수 | 평가 |
-    |------|------|------|
-    | 제목 영향력 | {report_data.get('content_effectiveness', {}).get('title_impact_score', 0):.1f} | {get_score_label(report_data.get('content_effectiveness', {}).get('title_impact_score', 0))} |
-    | 콘텐츠 참여도 | {report_data.get('content_effectiveness', {}).get('content_engagement_score', 0):.1f} | {get_score_label(report_data.get('content_effectiveness', {}).get('content_engagement_score', 0))} |
-    | 메시지 명확성 | - | {report_data.get('content_effectiveness', {}).get('message_clarity', 'N/A')} |
-    | CTA 효과성 | - | {report_data.get('content_effectiveness', {}).get('cta_effectiveness', 'N/A')} |
+### 주요 지표
+| 지표 | 점수 | 평가 |
+|------|------|------|
+| 제목 영향력 | {report_data.get('content_effectiveness', {}).get('title_impact_score', 0):.1f} | {get_score_label(report_data.get('content_effectiveness', {}).get('title_impact_score', 0))} |
+| 콘텐츠 참여도 | {report_data.get('content_effectiveness', {}).get('content_engagement_score', 0):.1f} | {get_score_label(report_data.get('content_effectiveness', {}).get('content_engagement_score', 0))} |
+| 메시지 명확성 | - | {report_data.get('content_effectiveness', {}).get('message_clarity', 'N/A')} |
+| CTA 효과성 | - | {report_data.get('content_effectiveness', {}).get('cta_effectiveness', 'N/A')} |
 
-    ### 개선 필요 영역
-    """
+### 개선 필요 영역
+"""
         
     # 개선 영역 추가
     for area in report_data.get('content_effectiveness', {}).get('improvement_areas', []):
@@ -205,65 +206,65 @@ def generate_fallback_markdown_report(report_data: dict, analysis_data) -> str:
     # 상세 분석 섹션
     markdown += f"""
 
-    ---
+---
 
-    ## 📈 상세 분석
+## 📈 상세 분석
 
-    ### 참여 지표
-    - **참여율**: {report_data.get('detailed_analysis', {}).get('engagement_metrics', {}).get('engagement_rate', 0):.2%}
-    - **좋아요/조회수 비율**: {report_data.get('detailed_analysis', {}).get('engagement_metrics', {}).get('like_to_view_ratio', 0):.3f}
-    - **댓글/좋아요 비율**: {report_data.get('detailed_analysis', {}).get('engagement_metrics', {}).get('comment_to_like_ratio', 0):.3f}
+### 참여 지표
+- **참여율**: {report_data.get('detailed_analysis', {}).get('engagement_metrics', {}).get('engagement_rate', 0):.2%}
+- **좋아요/조회수 비율**: {report_data.get('detailed_analysis', {}).get('engagement_metrics', {}).get('like_to_view_ratio', 0):.3f}
+- **댓글/좋아요 비율**: {report_data.get('detailed_analysis', {}).get('engagement_metrics', {}).get('comment_to_like_ratio', 0):.3f}
 
-    ### 감정 분석
-    - **감정 점수**: {report_data.get('detailed_analysis', {}).get('sentiment_analysis', {}).get('sentiment_score', 0):.1f}/100
-    - **논란 지수**: {report_data.get('detailed_analysis', {}).get('sentiment_analysis', {}).get('controversy_index', 0):.1f}/100
-    - **감정 강도**: {report_data.get('detailed_analysis', {}).get('sentiment_analysis', {}).get('emotional_intensity', 'N/A')}
-    - **토론 품질**: {report_data.get('detailed_analysis', {}).get('sentiment_analysis', {}).get('discussion_quality', 'N/A')}
+### 감정 분석
+- **감정 점수**: {report_data.get('detailed_analysis', {}).get('sentiment_analysis', {}).get('sentiment_score', 0):.1f}/100
+- **논란 지수**: {report_data.get('detailed_analysis', {}).get('sentiment_analysis', {}).get('controversy_index', 0):.1f}/100
+- **감정 강도**: {report_data.get('detailed_analysis', {}).get('sentiment_analysis', {}).get('emotional_intensity', 'N/A')}
+- **토론 품질**: {report_data.get('detailed_analysis', {}).get('sentiment_analysis', {}).get('discussion_quality', 'N/A')}
 
-    ---
+---
 
-    ## 💡 핵심 인사이트
-    """
+## 💡 핵심 인사이트
+"""
         
         # 인사이트 추가
     for i, insight in enumerate(report_data.get('insights', []), 1):
         confidence_emoji = {"high": "🟢", "medium": "🟡", "low": "🔴"}
         
         markdown += f"""
-        ### {i}. {insight.get('type', '').upper()} 분석
-        - **발견 사항**: {insight.get('finding', '')}
-        - **신뢰도**: {confidence_emoji.get(insight.get('confidence', ''), '')} {insight.get('confidence', '')}
-        - **비즈니스 영향**: {insight.get('business_impact', '')}
-        """
+### {i}. {insight.get('type', '').upper()} 분석
+- **발견 사항**: {insight.get('finding', '')}
+- **신뢰도**: {confidence_emoji.get(insight.get('confidence', ''), '')} {insight.get('confidence', '')}
+- **비즈니스 영향**: {insight.get('business_impact', '')}
+"""
         
     # 추천사항 섹션
     markdown += """
 
-    ---
+---
 
-    ## 🎬 콘텐츠 개선 제안
-    """
+## 🎬 콘텐츠 개선 제안
+"""
         
     for rec in report_data.get('content_recommendations', [])[:3]:
         markdown += f"""
-        ### 우선순위 {rec.get('priority', 0)} - {rec.get('content_type', '').upper()}
-        - **개선된 제목**: {rec.get('title', '')}
-        - **설명**: {rec.get('description', '')}
-        - **목표 지표**: {rec.get('target_metric', '')}
-        - **예상 개선율**: {rec.get('expected_improvement', '')}
-        - **예상 ROI**: {rec.get('estimated_roi', 0):.1f}
-        """
+### 우선순위 {rec.get('priority', 0)} - {rec.get('content_type', '').upper()}
+- **개선된 제목**: {rec.get('title', '')}
+- **설명**: {rec.get('description', '')}
+- **목표 지표**: {rec.get('target_metric', '')}
+- **예상 개선율**: {rec.get('expected_improvement', '')}
+- **예상 ROI**: {rec.get('estimated_roi', 0):.1f}
+"""
         
     # 액션 아이템
     markdown += """
 
-    ---
+---
 
-    ## 📌 우선순위 액션 아이템
+## 📌 우선순위 액션 아이템
 
-    | 우선순위 | 액션 | 기한 | 성공 지표 |
-    |----------|------|------|-----------|
-    """
+| 우선순위 | 액션 | 기한 | 성공 지표 |
+|----------|------|------|-----------|
+"""
         
     for action in report_data.get('action_items', [])[:5]:
         priority_emoji = {
@@ -274,10 +275,10 @@ def generate_fallback_markdown_report(report_data: dict, analysis_data) -> str:
     
     markdown += """
 
-    ---
+---
 
-    > 💡 **다음 단계**: 위 분석 결과를 바탕으로 콘텐츠 전략을 수정하고, 7일 후 성과를 재측정하세요.
-    """
+> 💡 **다음 단계**: 위 분석 결과를 바탕으로 콘텐츠 전략을 수정하고, 7일 후 성과를 재측정하세요.
+"""
     
     return markdown
 
