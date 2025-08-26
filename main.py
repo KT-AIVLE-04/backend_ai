@@ -5,6 +5,7 @@ from routers.sns_post_router import router as sns_post_router
 from routers.comments_analysis_router import router as comments_analysis_router
 from routers.report_generation_router import router as report_generation_router
 
+
 app = FastAPI(title = "Backend AI")
 
 app.include_router(shorts_router)
