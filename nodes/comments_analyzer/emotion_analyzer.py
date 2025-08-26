@@ -2,6 +2,9 @@ from config.settings import settings
 import replicate
 from typing import List, Dict, Any
 
+# 출처: https://huggingface.co/Copycats/koelectra-base-v3-generalized-sentiment-analysis
+# 출처: https://huggingface.co/jhgan/ko-sroberta-multitask
+
 def analyze_emotions_batch(texts: List[str], ids: List[int] = None) -> Dict[str, Any]:
     replicate_client = replicate.Client(api_token = settings.replicate_api_key)
 
