@@ -75,20 +75,34 @@ async def analyze_emotions(request: PostAnalysisRequest,
 
             print(f"Stores Industry 데이터 업데이트 완료\n")
 
+        sns_post = None
+
         if not request.title or not request.description or not request.tags or not request.publish_at or not request.url:
             sns_post = await fetch_sns_post_data(request.metrics.post_id)
 
+        if not request.title and sns_post:
             request.title = sns_post.title
+        
+        if not request.description and sns_post:
             request.description = sns_post.description
+
+        if not request.tags and sns_post:
             request.tags = sns_post.tags
+
+        if not request.publish_at and sns_post:
             request.publish_at = sns_post.publishAt
+        
+        if not request.url and sns_post:
             request.url = sns_post.url
 
-            print(f"SNS Post 데이터 업데이트 완료\n")
+        print(f"SNS Post 데이터 업데이트 완료\n")
+
 
         markdown_report = generate_final_report(request)
         
+
         return markdown_report
         
+    
     except Exception as e:
         raise HTTPException(status_code = 500, detail = f"게시글 성과 분석 리포트 데이터 생성 중 오류 발생: {str(e)}")
