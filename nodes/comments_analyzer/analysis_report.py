@@ -4,10 +4,10 @@ import re
 import anthropic
 from typing import Dict, Optional, Any
 import json
-
+from schemas.report_analysis_schema import PostAnalysisRequest
 
 class AnalysisReport:
-    def generate_analysis_report(self, analysis_data) -> Dict[str, Any]:
+    def generate_analysis_report(self, analysis_data: PostAnalysisRequest) -> Dict[str, Any]:
         """게시글 성과 분석 리포트"""
 
         client = anthropic.Anthropic(api_key = settings.claude_api_key)
@@ -32,6 +32,7 @@ class AnalysisReport:
         Always respond in structured and valid JSON format with precise data types.
         """
 
+        total_comments = analysis_data.metrics.comment_count if analysis_data.metrics.comment_count > 0 else 1
 
         prompt = f"""
         Analyze the following SNS post performance data with academic rigor and practical applicability.
@@ -52,9 +53,9 @@ class AnalysisReport:
 
         SENTIMENT ANALYSIS
         - Total Comments Count: {analysis_data.metrics.comment_count:,} comments
-        - Positive Comments Count: {analysis_data.emotion_data.positive_count:,} comments ({((analysis_data.positive_count / analysis_data.total_comments) * 100):.1f}%)
-        - Negative Comments Count: {analysis_data.emotion_data.negative_count:,} comments ({((analysis_data.negative_count / analysis_data.total_comments) * 100):.1f}%)
-        - Neutral Comments Count: {analysis_data.emotion_data.neutral_count:,} comments ({((analysis_data.neutral_count / analysis_data.total_comments) * 100):.1f}%)
+        - Positive Comments Count: {analysis_data.emotion_data.positive_count:,} comments ({((analysis_data.emotion_data.positive_count / total_comments) * 100):.1f}%)
+        - Negative Comments Count: {analysis_data.emotion_data.negative_count:,} comments ({((analysis_data.emotion_data.negative_count / total_comments) * 100):.1f}%)
+        - Neutral Comments Count: {analysis_data.emotion_data.neutral_count:,} comments ({((analysis_data.emotion_data.neutral_count / total_comments) * 100):.1f}%)
         - Positive Keywords: {', '.join(analysis_data.emotion_data.positive_keywords[:12])}
         - Negative Keywords: {', '.join(analysis_data.emotion_data.negative_keywords[:12])}
         - Neutral Keywords: {', '.join(analysis_data.emotion_data.neutral_keywords[:12])}
