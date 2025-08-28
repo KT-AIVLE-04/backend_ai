@@ -9,7 +9,7 @@ def analyze_emotions_batch(texts: List[str], ids: List[int] = None) -> Dict[str,
     replicate_client = replicate.Client(api_token = settings.replicate_api_key)
 
     output = replicate_client.run(
-        "choiminji-020102/ko-comments-emotion-analyzer:66ab25d5f8d4d4b905e9bffcf42adcbd6ba3859a4b27db89022f8a34586b1c17",
+        "choiminji-020102/ko-comments-emotion-analyzer:03ee810894a2120c443e65b7ec822dedbd72adcc40cc5109ddfee65de42da387",
         input = {
             "texts": texts,
             "ids": ids
