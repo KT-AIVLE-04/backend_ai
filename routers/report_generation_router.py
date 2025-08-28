@@ -69,6 +69,7 @@ async def analyze_emotions(request: PostAnalysisRequest,
     
     try:
         if store_id and not request.industry:
+            store_id = int(store_id)
             store_data = await fetch_store_data(store_id)
 
             request.industry = store_data.industry
