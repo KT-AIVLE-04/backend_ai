@@ -3,8 +3,8 @@ import anthropic
 import json
 from schemas.report_analysis_schema import PostAnalysisRequest
 
-def generate_korean_markdown_report(report_data: dict, analysis_data: PostAnalysisRequest) -> str:
-    """한국어 markdown 보고서 변환"""
+def generate_korean_markdown_report(report_data: dict, classified_industry: str, analysis_data: PostAnalysisRequest) -> str:
+    """한국어 markdown 보고서 변환""" 
 
     client = anthropic.Anthropic(api_key = settings.claude_api_key)
     
@@ -31,7 +31,7 @@ def generate_korean_markdown_report(report_data: dict, analysis_data: PostAnalys
     - 제목: {analysis_data.title}
     - URL: {analysis_data.url}
     - 플랫폼: YouTube
-    - 업종: {analysis_data.industry}
+    - 업종: {classified_industry}
     - 게시일: {analysis_data.publish_at}
     
     분석 결과 JSON:
@@ -152,11 +152,12 @@ def generate_korean_markdown_report(report_data: dict, analysis_data: PostAnalys
         return markdown_report
         
     except Exception as e:
-        return generate_fallback_markdown_report(report_data, analysis_data)
+        print("Fallback 실행\n")
+        return generate_fallback_markdown_report(report_data, classified_industry, analysis_data)
 
 
 
-def generate_fallback_markdown_report(report_data: dict, analysis_data) -> str:
+def generate_fallback_markdown_report(report_data: dict, classified_industry: str, analysis_data) -> str:
     """
     Claude API 호출 실패 시 기본 markdown 보고서 템플릿
     """
@@ -177,7 +178,7 @@ def generate_fallback_markdown_report(report_data: dict, analysis_data) -> str:
 - **제목**: {analysis_data.title}
 - **URL**: {analysis_data.url}
 - **플랫폼**: YouTube
-- **업종**: {analysis_data.industry}
+- **업종**: {classified_industry}
 - **게시일**: {analysis_data.publish_at}
 
 ### 종합 성과
