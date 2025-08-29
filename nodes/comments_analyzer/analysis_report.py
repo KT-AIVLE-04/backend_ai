@@ -12,6 +12,9 @@ class AnalysisReport:
 
         client = anthropic.Anthropic(api_key = settings.claude_api_key)
 
+        classified_industry = self.industry_classification(analysis_data.title, analysis_data.description)
+        print(f"업종 분류: {classified_industry}\n")
+
         system_prompt = """
         You are an elite SNS marketing analyst with 15+ years of experience in digital marketing, data science, and consumer psychology. 
         You specialize in: 
@@ -62,7 +65,7 @@ class AnalysisReport:
 
 
         BUSINESS CONTEXT
-        - Industry: {analysis_data.industry}
+        - Industry: {classified_industry}
 
         
         CONTENT-PERFORMANCE CORRELATION ANALYSIS REQUIRED:
@@ -212,10 +215,65 @@ class AnalysisReport:
                 "action_items": result.get("action_items", []),
             }
 
-            return report_data
+            return report_data, classified_industry
             
         except Exception as e:
             raise Exception(f"성과 분석 실패: {e}")
+
+
+    def industry_classification(self, title: str, description: str) -> str:
+        client = anthropic.Anthropic(api_key = settings.claude_api_key)
+
+        system_prompt = """
+        You are an expert industry classifier specializing in Korean content analysis.
+        Your task is to accurately classify content into one of five specific industry categories.
+        
+        Classification Categories:
+        - "음식점": Restaurants, dining experiences, food reviews, cooking, recipes, meal experiences, food delivery
+        - "카페": Coffee shops, cafes, beverages, coffee culture, desserts served in cafes, cafe atmosphere
+        - "패션": Fashion, clothing, accessories, style trends, outfit coordination, fashion brands, apparel
+        - "뷰티": Beauty, cosmetics, skincare, makeup, hair care, beauty trends, cosmetic products
+        - "테크": Technology, software, gadgets, AI, programming, tech reviews, digital products, IT services
+        
+        Always respond in ONLY valid string format with the classification.
+        """
+        
+        prompt = f"""
+        Analyze the following Korean content and classify it into one of the five industry categories.
+        
+        Title: {title}
+        Content: {description}
+        
+        Classification Guidelines:
+        1. Look for keywords, context clues, and overall theme
+        2. Consider the primary focus of the content
+        3. If content mentions multiple industries, choose the dominant one
+        
+        Respond in this exact string format:
+        "<음식점|카페|패션|뷰티|테크>",
+        """
+
+        try:
+            response = client.messages.create(
+                model = "claude-sonnet-4-20250514",
+                max_tokens = 300,
+                temperature = 0.1,
+                system = system_prompt,
+                messages = [
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+            
+            result = response.content[0].text.strip()
+
+            return result
+        
+        
+        except Exception as e:
+            print(f"업종 분류 실패: {e}")
 
 
 
