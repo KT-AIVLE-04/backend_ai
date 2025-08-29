@@ -52,6 +52,6 @@ builder.add_edge("generate_music", "merge_video_with_audio")
 builder.add_edge("merge_video_with_audio", END)
 
 
-redis_client = redis.Redis.from_url("redis://localhost:6379")
+redis_client = redis.Redis.from_url("redis://redis-stack:6379")
 checkpointer = RedisSaver(redis_client=redis_client, ttl={"default_ttl": 3600})
 graph = builder.compile(checkpointer=checkpointer)
