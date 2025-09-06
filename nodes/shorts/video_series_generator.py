@@ -1,18 +1,15 @@
 from config.settings import settings
 from states.shorts_state import ShortsState
 import os
-import re
-import json
 import requests
-import random
 import time
-from datetime import datetime
 import shutil
-from typing import List, Dict, Optional, Any
+from typing import List, Optional
 from moviepy.editor import VideoFileClip, VideoClip
 import replicate
+from core.decorators import timed_node
 
-
+@timed_node
 def generate_video_series(state: ShortsState) -> ShortsState:
     client_video = replicate.Client(api_token = settings.replicate_api_key)
 

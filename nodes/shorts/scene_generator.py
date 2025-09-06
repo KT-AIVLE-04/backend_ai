@@ -4,8 +4,9 @@ from schemas.shorts_schema import Scene
 from states.shorts_state import ShortsState
 from config.settings import settings
 import json, re, ast
+from core.decorators import timed_node
 
-
+@timed_node
 def generate_scenes(state: ShortsState) -> ShortsState:
     # OpenAI 클라이언트 초기화
     client = OpenAI(api_key=settings.openai_api_key)
@@ -88,7 +89,6 @@ def create_user_prompt(state: ShortsState):
     
     prompt = f"""다음 정보를 바탕으로 **정확히 {scene_count}개의 장면**을 생성하세요.
 - 각 장면은 반드시 5초 분량입니다.
-- 출력은 JSON 배열 형식만 사용하세요. 코드 블록, 추가 설명 금지.
 
 📌 매장 정보:
 - 업종: {state.business_type}

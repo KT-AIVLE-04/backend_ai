@@ -1,15 +1,14 @@
 from config.settings import settings
 from states.shorts_state import ShortsState
-import os
 import re
 import json
 import copy
-from enum import Enum
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Any
 import numpy as np
 import anthropic
+from core.decorators import timed_node
 
-
+@timed_node
 def generate_suno_music_prompt(state: ShortsState) -> ShortsState:
     if not state.video_analysis:
         print("비디오 분석 결과를 확인할 수 없음\n")

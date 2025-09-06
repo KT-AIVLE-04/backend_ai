@@ -4,7 +4,9 @@ from states.shorts_state import ShortsState
 from openai import OpenAI
 import replicate
 from utils.image_utils import combine_images
+from core.decorators import timed_node
 
+@timed_node
 def generate_scene_images(state: ShortsState) -> ShortsState:
     
     openai_client = OpenAI(api_key=settings.openai_api_key)

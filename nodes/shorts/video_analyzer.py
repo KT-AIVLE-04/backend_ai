@@ -1,17 +1,14 @@
 from states.shorts_state import ShortsState
 import os
-import re
-import json
-import time
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional
 from collections import Counter
 import cv2
 import numpy as np
-from scipy import signal
 from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d
+from core.decorators import timed_node
 
-
+@timed_node
 def analyze_final_video(state: ShortsState) -> ShortsState:
     """영상 분석 (오디오 생성에 사용)"""
 

@@ -3,9 +3,10 @@ from states.shorts_state import ShortsState
 import os
 import requests
 import time
-from typing import List, Dict, Optional, Tuple, Any
+from typing import Optional, Tuple
+from core.decorators import timed_node
 
-
+@timed_node
 def generate_music(state: ShortsState) -> ShortsState:
     suno_url = "https://api.sunoapi.org/api/v1/generate"
     suno_api_key = settings.suno_api_key

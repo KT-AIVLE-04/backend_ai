@@ -7,7 +7,9 @@ from urllib.parse import quote
 from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_audioclips
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
+from core.decorators import timed_node
 
+@timed_node
 def merge_video_with_audio(state: ShortsState) -> ShortsState:
     """영상 + 오디오 + 마지막 Fadeout (2.5초) """
     if not state.final_video_path or not state.music_files:

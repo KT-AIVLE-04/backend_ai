@@ -1,11 +1,12 @@
-
 import json
 from config.settings import settings
+from core.decorators import timed_node
 from openai import OpenAI
 from states.shorts_state import ShortsState
 
 client = OpenAI(api_key=settings.openai_api_key)
 
+@timed_node
 def analyse_input_images(state: ShortsState) -> ShortsState:
     
     if not state.image_list:
@@ -17,7 +18,7 @@ def analyse_input_images(state: ShortsState) -> ShortsState:
 업종: {state.business_type}
 매장명: {state.store_name}
 
-제공된 이미지들은 {state.business_type} 매장의 사진들입니다. 각 이미지를 분석하여 다음 정보를 JSON 형태로 제공해주세요:
+제공된 이미지들은 광고 제작에 필요한 사진들입니다. 각 이미지를 분석하여 다음 정보를 JSON 형태로 제공해주세요:
 
 1. main_object: 이미지에서 광고에 활용할 수 있는 핵심 요소들 (예: "딸기케이크", "커피", "매장 내부", "매장 외부", "상의 전면" 등)
 2. brand_identity: 이미지에서 파악할 수 있는 브랜드의 분위기나 아이덴티티 (예: "파스텔", "따뜻함", "모던", "빈티지" 등)
@@ -101,7 +102,6 @@ JSON 형태로만 응답해주세요. 코드블럭은 제외하세요.
         
         # 업데이트된 brand_concept 설정
         state.brand_concept = list(all_brand_identities)
-        print(state)
         
         return state
         
