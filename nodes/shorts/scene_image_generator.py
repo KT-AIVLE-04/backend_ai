@@ -19,7 +19,7 @@ def generate_scene_images(state: ShortsState) -> ShortsState:
         print(f"장면 제목: {scene.title}")
         
         try:
-            # GPT-4o로 이미지 선택 및 프롬프트 생성
+            # GPT-4o-mini로 이미지 선택 및 프롬프트 생성
             scene_config = generate_scene_config_for_flux_kontext(
                 openai_client, state, scene, i
             )
@@ -82,7 +82,7 @@ def generate_scene_images(state: ShortsState) -> ShortsState:
 
 def generate_scene_config_for_flux_kontext(openai_client, state, scene, scene_index):
     """
-    GPT-4o를 사용하여 장면 분석 후 참고 이미지 선택 및 flux-kontext 프롬프트 생성
+    GPT-4o-mini를 사용하여 장면 분석 후 참고 이미지 선택 및 flux-kontext 프롬프트 생성
     """
     system_message = create_system_message()
     user_prompt = create_user_prompt(state, scene, scene_index)
@@ -94,14 +94,14 @@ def generate_scene_config_for_flux_kontext(openai_client, state, scene, scene_in
     
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=messages,
             max_tokens=1500,
             temperature=0.3
         )
         
         response_text = response.choices[0].message.content.strip()
-        print(f"GPT-4o 분석 결과: {response_text}")
+        print(f"GPT-4o-mini 분석 결과: {response_text}")
         
         # JSON 파싱
         try:
@@ -118,7 +118,7 @@ def generate_scene_config_for_flux_kontext(openai_client, state, scene, scene_in
                 return None
         
     except Exception as e:
-        print(f"GPT-4o 호출 오류: {e}")
+        print(f"GPT-4o-mini 호출 오류: {e}")
         return None
 
 def create_system_message():
@@ -132,7 +132,6 @@ def create_system_message():
 1. 장면의 첫 프레임에 어떤 시각적 요소가 필요한지 파악
 2. 전체 영상 스타일 가이드(scene_summary)를 바탕으로 일관성 유지 방향 결정
 3. 제공된 이미지들 중 가장 적합한 참고 이미지 선택
-4. flux-kontext-max가 이해하기 쉬운 영어 프롬프트 생성
 
 🔧 **선택 기준**:
 - 장면의 주요 객체/소품과 일치하는 이미지
