@@ -1,4 +1,5 @@
 import json
+import asyncio
 from config.settings import settings
 from states.shorts_state import ShortsState
 from openai import OpenAI
@@ -16,25 +17,97 @@ def generate_scene_images(state: ShortsState) -> ShortsState:
     
     # 모든 장면에 대해 한 번의 LLM 호출로 설정 생성
     all_scene_configs = generate_all_scenes_config_for_flux_kontext(openai_client, state)
+
+    # 비동기 이미지 생성을 동기 방식으로 실행
+    try:
+        # 현재 실행 중인 이벤트 루프가 있는지 확인
+        asyncio.get_running_loop()
+
+        # 이미 실행중인 이벤트 루프가 있으면, 별도의 스레드에서 새로운 이벤트 루프를 생성해서 비동기 작업 실행
+        image_urls = run_async_in_sync(generate_images_async(replicate_client, state, all_scene_configs))
+    except RuntimeError:
+        # 실행 중인 루프가 없으면 새로 생성
+        image_urls = asyncio.run(generate_images_async(replicate_client, state, all_scene_configs))
+    
+    # 결과를 순서대로 state.scenes_image_list에 저장
+    state.scenes_image_list.extend(image_urls)
+    
+    print(f"\n이미지 생성 완료: {len(state.scenes_image_list)}/{len(state.scenes)}개")
+    return state
+
+def run_async_in_sync(coro):
+    """
+    실행 중인 이벤트 루프에서 코루틴을 동기적으로 실행
+    """
+    import concurrent.futures
+    
+    def run_in_thread():
+        new_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(new_loop)
+        try:
+            return new_loop.run_until_complete(coro)
+        finally:
+            new_loop.close()
+    
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(run_in_thread)
+        return future.result()
+
+async def generate_images_async(replicate_client, state, all_scene_configs):
+    """
+    모든 장면의 이미지를 병렬로 생성하고 순서대로 결과를 반환
+    """
+    tasks = []
     
     for i, (scene, scene_config) in enumerate(zip(state.scenes, all_scene_configs)):
-        print(f"\n=== 장면 {i+1}/{len(state.scenes)} 처리 중 ===")
-        print(f"장면 제목: {scene.title}")
+        print(f"장면 {i+1} 비동기 작업 준비 중: {scene.title}")
         
-        try:
-            if not scene_config:
-                print(f"장면 {i+1} 설정이 없습니다. 건너뜁니다.")
-                continue
-            
-            # 선택된 이미지들로 참고 이미지 생성
-            selected_image_urls = [
-                state.image_list[idx].url 
-                for idx in scene_config["image_index"]
-                if idx < len(state.image_list)
-            ]
-            
-            if not selected_image_urls:
-                scene_image_url = replicate_client.run(
+        # 선택된 이미지들로 참고 이미지 생성
+        selected_image_urls = [
+            state.image_list[idx].url 
+            for idx in scene_config["image_index"]
+            if idx < len(state.image_list)
+        ]
+        
+        task = asyncio.create_task(
+            generate_single_scene_image_async(
+                replicate_client, scene_config, selected_image_urls, i, scene.title
+            )
+        )
+        tasks.append(task)
+    
+    print("모든 장면 이미지 생성 작업을 병렬로 시작합니다...")
+    
+    # 모든 작업이 완료될 때까지 대기하고 순서대로 결과 수집
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # 결과 처리 (예외 처리 및 None 필터링)
+    image_urls = []
+    for i, result in enumerate(results):
+        if isinstance(result, Exception):
+            print(f"장면 {i+1} 이미지 생성 중 오류: {result}")
+            continue
+        elif result is None:
+            print(f"장면 {i+1} 이미지 생성 실패 또는 설정 없음")
+            continue
+        else:
+            image_urls.append(result)
+            print(f"장면 {i+1} 이미지 생성 완료: {result}")
+    
+    return image_urls
+
+async def generate_single_scene_image_async(replicate_client, scene_config, selected_image_urls, scene_index, scene_title):
+    """
+    단일 장면의 이미지를 비동기로 생성
+    """
+    try:
+        loop = asyncio.get_event_loop()
+        
+        if not selected_image_urls:
+            # 참고 이미지 없이 생성
+            scene_image_url = await loop.run_in_executor(
+                None,
+                lambda: replicate_client.run(
                     "black-forest-labs/flux-kontext-max",
                     input={
                         "prompt": scene_config["flux-kontext-prompt"],
@@ -44,11 +117,17 @@ def generate_scene_images(state: ShortsState) -> ShortsState:
                         "prompt_upsampling": False
                     }
                 )
-            else:
-                # 참고 이미지 합성
-                reference_image_url = combine_images(selected_image_urls)
-                
-                scene_image_url = replicate_client.run(
+            )
+        else:
+            # 참고 이미지와 함께 생성
+            reference_image_url = await loop.run_in_executor(
+                None,
+                lambda: combine_images(selected_image_urls)
+            )
+            
+            scene_image_url = await loop.run_in_executor(
+                None,
+                lambda: replicate_client.run(
                     "black-forest-labs/flux-kontext-max",
                     input={
                         "prompt": scene_config["flux-kontext-prompt"],
@@ -59,24 +138,21 @@ def generate_scene_images(state: ShortsState) -> ShortsState:
                         "prompt_upsampling": False
                     }
                 )
-            
-            # 결과 URL 처리
-            if hasattr(scene_image_url, 'url'):
-                image_url = scene_image_url.url
-            elif isinstance(scene_image_url, str):
-                image_url = scene_image_url
-            else:
-                image_url = str(scene_image_url)
-            
-            state.scenes_image_list.append(image_url)
-            print(f"장면 {i+1} 이미지 생성 완료: {image_url}")
-            
-        except Exception as e:
-            print(f"장면 {i+1} 이미지 생성 중 오류: {e}")
-            continue
-    
-    print(f"\n이미지 생성 완료: {len(state.scenes_image_list)}/{len(state.scenes)}개")
-    return state
+            )
+        
+        # 결과 URL 처리
+        if hasattr(scene_image_url, 'url'):
+            image_url = scene_image_url.url
+        elif isinstance(scene_image_url, str):
+            image_url = scene_image_url
+        else:
+            image_url = str(scene_image_url)
+        
+        return image_url
+        
+    except Exception as e:
+        print(f"장면 {scene_index+1} ({scene_title}) 이미지 생성 중 오류: {e}")
+        raise e
 
 def generate_all_scenes_config_for_flux_kontext(openai_client, state):
     """
