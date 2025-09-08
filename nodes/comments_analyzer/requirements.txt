@@ -1,0 +1,6 @@
+emoji==2.14.1
+soynlp==0.0.493
+
+transformers==4.55.2
+sentence-transformers==5.1.0
+keybert==0.9.0
