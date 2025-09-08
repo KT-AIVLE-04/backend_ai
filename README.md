@@ -163,13 +163,15 @@ curl -X POST "http://localhost:8000/api/comments/analyze" \
     "comments": [
       {
         "id": 1,
-        "content": "정말 맛있어요! 추천합니다",
-        "like_count": 5
+        "content": "정말 맛있어요! 추천합니다"
       },
       {
         "id": 2,
-        "content": "가격이 좀 비싸네요",
-        "like_count": 2
+        "content": "가격이 좀 비싸네요"
+      },
+      {
+        "id": 3,
+        "content": "배고파요"
       }
     ]
   }'
