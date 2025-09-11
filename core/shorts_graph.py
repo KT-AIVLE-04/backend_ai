@@ -1,10 +1,8 @@
-# core/agent_graph.py
-from typing import Literal
+import redis
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.redis import RedisSaver
 from nodes.shorts.input_image_analyzer import analyse_input_images
 from nodes.shorts.scenes_summarizer import summarize_scenes
-import redis
 from nodes.shorts.scene_generator import generate_scenes
 from nodes.shorts.scene_image_generator import generate_scene_images
 from nodes.shorts.human_select import user_select_scenario
@@ -52,6 +50,6 @@ builder.add_edge("generate_music", "merge_video_with_audio")
 builder.add_edge("merge_video_with_audio", END)
 
 
-redis_client = redis.Redis.from_url("redis://redis-stack:6379")
+redis_client = redis.Redis.from_url("redis://localhost:6379")
 checkpointer = RedisSaver(redis_client=redis_client, ttl={"default_ttl": 3600})
 graph = builder.compile(checkpointer=checkpointer)

@@ -6,8 +6,9 @@ import json
 from repositories.in_memory_ad_style_repository import InMemoryAdStyleRepository
 from states.shorts_state import ShortsState
 from schemas.shorts_schema import Scenario
+from core.decorators import timed_node
 
-
+@timed_node
 def generate_scenarios(state: ShortsState, api_key=settings.openai_api_key) -> ShortsState:
     # OpenAI 클라이언트 초기화
     client = openai.OpenAI(api_key=api_key)
@@ -17,7 +18,7 @@ def generate_scenarios(state: ShortsState, api_key=settings.openai_api_key) -> S
 
 다음 규칙을 반드시 준수해주세요:
 1. 동영상 촬영 기법(예: 카메라 무빙, 앵글, 렌즈 등)은 절대 포함하지 마세요. 오직 장면의 연속적인 스토리만 작성하세요.
-2. 텍스트, 자막, 대사, 나레이션은 포함하지 마세요.
+2. 텍스트, 자막, 대사, 나레이션, 음악은 포함하지 마세요.
 
 응답 형식은 아래와 같이 JSON 배열로만 작성하세요. 코드 블록을 사용하지 마세요.
 
@@ -47,7 +48,7 @@ def generate_scenarios(state: ShortsState, api_key=settings.openai_api_key) -> S
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o", 
+            model="gpt-4o-mini", 
             messages=messages,
             max_tokens=2000,
             temperature=0.7
@@ -80,13 +81,6 @@ def create_scenario_prompt(state: ShortsState) -> str:
 🎯 목표:
 경쟁이 치열한 숏폼 플랫폼에서 **시청자의 시선을 단번에 사로잡을 만큼 독창적이고 감각적인 시나리오** 3가지를 작성해주세요.
 주어진 매장 정보, 광고 조건을 분석한 뒤에 그 분석 내용을 바탕으로 시나리오를 작성해주세요.
-각 시나리오는 **스토리 형식의 장면 설명으로 150자 이상** 작성해주세요.
-
-✨ 창의성 강조:
-- 누구나 한 번 보면 기억에 남을 정도로 **강렬하고 신선한 발상**을 담아주세요.
-- 현실에서 보기 힘든 **비일상적 연출**, **극적인 물체 움직임**, **감각적인 시각효과** 등을 적극 활용해주세요.
-- 특히, **제품이나 서비스의 특성을 최대한 살려**, 극적이나 마법적으로 독창적이고 참신한 장면을 만들어주세요.
-- 다만, **AI로 실제 영상 생성이 가능한 수준**의 장면 구성으로 제한해주세요.
 
 📌 매장 정보:
 - 업종: {state.business_type}
@@ -108,7 +102,6 @@ def create_scenario_prompt(state: ShortsState) -> str:
 4. 광고 유형에 맞게 **자연스럽고 세련된** 장면 구성을 해주세요.
 5. 타겟 고객이 흥미를 느낄 수 있도록 **감각적이고 반전 있는 장면 연출**에 집중해주세요.
 6. ‘특별 요구사항’은 반드시 반영해주세요.
-7. **텍스트, 자막, 대사, 설명 문구는 포함하지 말고**, **오직 장면의 흐름만 묘사해주세요.**
 """
 
     return prompt

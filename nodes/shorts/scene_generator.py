@@ -4,8 +4,9 @@ from schemas.shorts_schema import Scene
 from states.shorts_state import ShortsState
 from config.settings import settings
 import json, re, ast
+from core.decorators import timed_node
 
-
+@timed_node
 def generate_scenes(state: ShortsState) -> ShortsState:
     # OpenAI 클라이언트 초기화
     client = OpenAI(api_key=settings.openai_api_key)
@@ -77,8 +78,8 @@ def create_system_message():
 - 각 장면은 다음 형식:
 [
   {
-    "장면 제목": "Hook 제목 (간결·주목도 높은 문장) (영어)",
-    "장면 설명": "5초 분량의 장면을 마침표 기준 3~4문장으로 구체 묘사. 카메라 움직임, 조명, 배경, 색감, 소품 상태와 움직임을 상세 기술. (영어)"
+    "장면 제목": "Hook 제목 (간결·주목도 높은 문장을 영어로 작성)",
+    "장면 설명": "5초 분량의 장면을 마침표 기준 3~4문장으로 구체적으로 영어로 묘사. 카메라 움직임, 조명, 배경, 색감, 소품 상태와 움직임을 상세 기술."
   }
 ]
 """
@@ -88,7 +89,6 @@ def create_user_prompt(state: ShortsState):
     
     prompt = f"""다음 정보를 바탕으로 **정확히 {scene_count}개의 장면**을 생성하세요.
 - 각 장면은 반드시 5초 분량입니다.
-- 출력은 JSON 배열 형식만 사용하세요. 코드 블록, 추가 설명 금지.
 
 📌 매장 정보:
 - 업종: {state.business_type}

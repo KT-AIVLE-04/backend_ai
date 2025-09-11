@@ -1,16 +1,15 @@
 from config.settings import settings
 from states.shorts_state import ShortsState
-import os
 import re
 import json
-import base64
 import random
 from datetime import datetime
 from typing import List, Dict, Optional, Any
 from pydantic import BaseModel, Field
 import anthropic
+from core.decorators import timed_node
 
-
+@timed_node
 def seedance_prompt_generation(state: ShortsState) -> ShortsState:
     client = anthropic.Anthropic(api_key = settings.claude_api_key)
     

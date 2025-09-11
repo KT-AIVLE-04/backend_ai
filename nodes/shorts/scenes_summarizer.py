@@ -1,9 +1,11 @@
 from openai import OpenAI
 from states.shorts_state import ShortsState
 from config.settings import settings
+from core.decorators import timed_node
 
 client = OpenAI(api_key=settings.openai_api_key)
 
+@timed_node
 def summarize_scenes(state: ShortsState) -> ShortsState:
     """
     장면들을 분석하여 일관성 유지를 위한 요약 생성
